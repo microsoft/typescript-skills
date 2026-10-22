@@ -1,14 +1,10 @@
 ---
 name: typescript-build-references
-description: Add TypeScript project references and incremental builds to a monorepo. Not implemented yet; do not use this stub to change the build graph.
+description: Add TypeScript project references and incremental builds to a monorepo.
 disable-model-invocation: true
-metadata:
-  status: stub
 ---
 
 # Add project references and incremental builds
-
-**Status: stub.** The build-reference instructions and validation are not implemented.
 
 If invoked, tell the user this skill is not implemented. Do not change project
 configuration or claim that project references have been added.

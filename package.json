@@ -5,7 +5,7 @@
   "description": "Development checks for the TypeScript agent skills marketplace.",
   "license": "MIT",
   "engines": {
-    "node": ">=22"
+    "node": ">=24"
   },
   "scripts": {
     "check": "node eng/check-skills.mjs",

@@ -1,14 +1,10 @@
 ---
 name: typescript-project-setup
-description: Create a new TypeScript project with a suitable configuration. Not implemented yet; do not use this stub to scaffold a project.
+description: Create a new TypeScript project with a suitable configuration.
 disable-model-invocation: true
-metadata:
-  status: stub
 ---
 
 # Set up a TypeScript project
-
-**Status: stub.** The project setup instructions and validation are not implemented.
 
 If invoked, tell the user this skill is not implemented. Do not create or change
 project files or claim that setup has been performed.

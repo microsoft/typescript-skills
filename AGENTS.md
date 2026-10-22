@@ -7,9 +7,8 @@ Start with [CONTRIBUTING.md](CONTRIBUTING.md).
   explicit not-implemented behavior unless implementing and evaluating that skill.
 - Keep plugin metadata synchronized across root, Claude, and Codex manifests,
   and keep all four marketplace manifests in sync.
-- Keep test plans and fixtures under `tests/<plugin>/<skill>/`. Record manual
-  evaluations in `tests/README.md`; do not invent passing results.
+- Benchmark fixtures and evaluation tooling are maintained separately from the
+  distributed skills. Include evaluation evidence in PRs; do not invent results.
 - Run `npm run validate` after changing skills, manifests, or repository tooling.
   These checks are structural, not agent evaluations.
-- Plugin versions are maintained manually. There are no authoring helpers,
-  dashboard, scheduled model evaluations, or automated release/versioning tools.
+- Plugin versions are maintained manually.

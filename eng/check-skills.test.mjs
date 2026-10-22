@@ -18,7 +18,6 @@ function fixture(t) {
     ".cursor-plugin",
     ".agents/plugins",
     "plugins",
-    "tests/typescript",
   ]) {
     const destination = join(root, path);
     mkdirSync(dirname(destination), { recursive: true });
@@ -102,10 +101,9 @@ test("rejects missing SKILL.md files", (t) => {
   assert.throws(() => checkRepository(root), /ENOENT.*SKILL.md/);
 });
 
-test("rejects missing test plans", (t) => {
+test("accepts skills without repository-local benchmark fixtures or test plans", (t) => {
   const root = fixture(t);
-  rmSync(join(root, "tests/typescript/typescript-update/README.md"));
-  assert.throws(() => checkRepository(root), /ENOENT.*README.md/);
+  assert.deepEqual(checkRepository(root), { plugins: 1, skills: 6 });
 });
 
 test("rejects skill names that differ from their directories", (t) => {
@@ -132,10 +130,10 @@ test("rejects empty descriptions", (t) => {
   assert.throws(() => checkRepository(root), /expected a nonempty description/);
 });
 
-test("rejects accidentally auto-invocable stubs", (t) => {
+test("accepts invocation control set to false", (t) => {
   const root = fixture(t);
-  changeSkill(root, (content) => content.replace("disable-model-invocation: true\n", ""));
-  assert.throws(() => checkRepository(root), /stubs must disable automatic invocation/);
+  changeSkill(root, (content) => content.replace("disable-model-invocation: true", "disable-model-invocation: false"));
+  assert.deepEqual(checkRepository(root), { plugins: 1, skills: 6 });
 });
 
 test("rejects string-valued invocation flags", (t) => {
@@ -150,10 +148,8 @@ test("accepts CRLF skill frontmatter", (t) => {
   assert.deepEqual(checkRepository(root), { plugins: 1, skills: 6 });
 });
 
-test("accepts implemented skills without stub metadata or an invocation override", (t) => {
+test("accepts skills with only the required frontmatter fields", (t) => {
   const root = fixture(t);
-  changeSkill(root, (content) => content
-    .replace("disable-model-invocation: true\n", "")
-    .replace("metadata:\n  status: stub\n", ""));
+  changeSkill(root, (content) => content.replace("disable-model-invocation: true\n", ""));
   assert.deepEqual(checkRepository(root), { plugins: 1, skills: 6 });
 });

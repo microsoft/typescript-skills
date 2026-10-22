@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD041 -->
+
 <!-- BEGIN MICROSOFT SECURITY.MD V1.0.0 BLOCK -->
 
 ## Security

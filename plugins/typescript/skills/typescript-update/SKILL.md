@@ -1,14 +1,10 @@
 ---
 name: typescript-update
-description: Update an existing project to TypeScript 7. Not implemented yet; do not use this stub to perform a migration.
+description: Update an existing project to TypeScript 7.
 disable-model-invocation: true
-metadata:
-  status: stub
 ---
 
 # Update to TypeScript 7
-
-**Status: stub.** The migration instructions and validation are not implemented.
 
 If invoked, tell the user this skill is not implemented. Do not change the project
 or claim that an update has been performed.

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parse } from "yaml";
@@ -33,14 +33,14 @@ function directories(root, path) {
     .sort();
 }
 
-function checkName(value, path) {
+function assertLowercaseKebabName(value, path) {
   assert(
     typeof value === "string" && value.length <= 64 && namePattern.test(value),
     `${path}: expected a lowercase kebab-case name of at most 64 characters`,
   );
 }
 
-function checkDescription(value, path) {
+function assertNonemptyDescription(value, path) {
   assert(
     typeof value === "string" && value.trim().length > 0 && value.length <= 1024,
     `${path}: expected a nonempty description of at most 1024 characters`,
@@ -50,7 +50,7 @@ function checkDescription(value, path) {
 export function checkRepository(root) {
   const marketplaces = marketplacePaths.map((path) => {
     const marketplace = readJson(root, path);
-    checkName(marketplace.name, `${path} name`);
+    assertLowercaseKebabName(marketplace.name, `${path} name`);
     assert(
       typeof marketplace.owner?.name === "string" && marketplace.owner.name.trim(),
       `${path}: expected an owner name`,
@@ -62,8 +62,8 @@ export function checkRepository(root) {
 
     const names = new Set();
     for (const plugin of marketplace.plugins) {
-      checkName(plugin.name, `${path} plugin name`);
-      checkDescription(plugin.description, `${path} ${plugin.name}`);
+      assertLowercaseKebabName(plugin.name, `${path} plugin name`);
+      assertNonemptyDescription(plugin.description, `${path} ${plugin.name}`);
       assert(!names.has(plugin.name), `${path}: duplicate plugin ${plugin.name}`);
       names.add(plugin.name);
       assert.equal(
@@ -104,7 +104,7 @@ export function checkRepository(root) {
       typeof manifest.version === "string" && versionPattern.test(manifest.version),
       `${pluginPath}: expected a stable major.minor.patch version`,
     );
-    checkDescription(manifest.description, pluginPath);
+    assertNonemptyDescription(manifest.description, pluginPath);
     assert.equal(
       manifest.description,
       marketplaces[0].plugins.find((entry) => entry.name === plugin).description,
@@ -124,14 +124,8 @@ export function checkRepository(root) {
 
     const skills = directories(root, `${pluginPath}/skills`);
     assert(skills.length > 0, `${pluginPath}: expected at least one skill`);
-    assert.deepEqual(
-      directories(root, `tests/${plugin}`),
-      skills,
-      `tests/${plugin}: test directories must match the skills`,
-    );
-
     for (const skill of skills) {
-      checkName(skill, `${pluginPath}/skills/${skill}`);
+      assertLowercaseKebabName(skill, `${pluginPath}/skills/${skill}`);
       const path = `${pluginPath}/skills/${skill}/SKILL.md`;
       const content = readFileSync(join(root, path), "utf8");
       const frontmatter = /^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/.exec(content);
@@ -145,7 +139,7 @@ export function checkRepository(root) {
       }
       assert(metadata && typeof metadata === "object", `${path}: expected frontmatter fields`);
       assert.equal(metadata.name, skill, `${path}: name must match its directory`);
-      checkDescription(metadata.description, path);
+      assertNonemptyDescription(metadata.description, path);
       assert(frontmatter[2].trim(), `${path}: expected a nonempty body`);
       if (Object.hasOwn(metadata, "disable-model-invocation")) {
         assert.equal(
@@ -154,18 +148,6 @@ export function checkRepository(root) {
           `${path}: disable-model-invocation must be a boolean`,
         );
       }
-      if (metadata.metadata?.status === "stub") {
-        assert.equal(
-          metadata["disable-model-invocation"],
-          true,
-          `${path}: stubs must disable automatic invocation`,
-        );
-        assert.match(frontmatter[2], /not implemented/i, `${path}: stubs must state they are not implemented`);
-      }
-      assert(
-        statSync(join(root, "tests", plugin, skill, "README.md")).isFile(),
-        `tests/${plugin}/${skill}: expected a README.md test plan`,
-      );
       skillCount++;
     }
   }

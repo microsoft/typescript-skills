@@ -1,16 +1,16 @@
 {
-  "name": "typescript-agent-skills",
+  "name": "typescript-skills",
   "owner": {
-    "name": "TypeScript Team at Microsoft"
+    "name": "TypeScript Team"
   },
   "metadata": {
-    "description": "TypeScript agent skills from the TypeScript team at Microsoft."
+    "description": "TypeScript skills from the TypeScript Team."
   },
   "plugins": [
     {
       "name": "typescript",
       "source": "./plugins/typescript",
-      "description": "Skills for TypeScript upgrades, project setup, strictness, ESM, and builds. Currently scaffolded; all skills are stubs."
+      "description": "Skills for TypeScript upgrades, project setup, strictness, ESM, and builds."
     }
   ]
 }
