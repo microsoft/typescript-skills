@@ -23,7 +23,7 @@ standalone skill files, and **none of these numbers evaluates this PR's stubs**.
 | typescript-strict | 8.3/8.3 | +162.0% | +270.4% | +29.1 pp (11.1 -> 40.2%) |
 | typescript-esm | 6.0/6.0 | +21.4% | +74.1% | 0.0 pp (66.7 -> 66.7%) |
 | typescript-publish-types | 5.0/5.0 | +125.6% | +99.1% | +33.3 pp (46.7 -> 80%) |
-| typescript-build-references | 5.0/5.0 | +317.2% | +370.9% | +100.0 pp (0 -> 100%) |
+| typescript-build-references | 5.7/5.7 | +84.5% | +136.7% | +52.2 pp (30 -> 82.2%) |
 | typescript-build-project | 3.3/4.7 | +34.0% | +63.7% | 0.0 pp (71.7 -> 71.7%) |
 
 `typescript-build-project` is a general build skill, evaluated during varied
