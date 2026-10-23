@@ -4,7 +4,7 @@ Skills for coding agents working with TypeScript, JavaScript, and Node.js.
 The marketplace and plugin layout follows [dotnet/skills](https://github.com/dotnet/skills).
 Skills use the [Agent Skills](https://agentskills.io) format.
 
-> **Work in progress:** all six skills are stubs, not usable migration or build
+> **Work in progress:** all seven skills are stubs, not usable task
 > guidance. Automatic invocation is disabled. Explicitly invoking a stub only
 > reports that it is not implemented.
 
@@ -18,8 +18,12 @@ The initial `typescript` plugin groups the following skills:
 | [typescript-project-setup](plugins/typescript/skills/typescript-project-setup/SKILL.md) | Create a new TypeScript project with a suitable configuration. |
 | [typescript-strict](plugins/typescript/skills/typescript-strict/SKILL.md) | Enable `strict` and fix the resulting errors. |
 | [typescript-esm](plugins/typescript/skills/typescript-esm/SKILL.md) | Switch from CommonJS to ESM and fix errors. |
+| [typescript-publish-types](plugins/typescript/skills/typescript-publish-types/SKILL.md) | Publish TypeScript declarations that consumers can resolve from the packed package. |
 | [typescript-build-references](plugins/typescript/skills/typescript-build-references/SKILL.md) | Add project references and incremental builds to a monorepo. |
 | [typescript-build-project](plugins/typescript/skills/typescript-build-project/SKILL.md) | Build a complex TypeScript project correctly. |
+
+`typescript-build-project` is a general build skill. It remains in this plugin
+for now and may move to a separate `typescript-agent` plugin.
 
 ## Installation
 

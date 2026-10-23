@@ -7,7 +7,7 @@
     {
       "name": "typescript",
       "source": "./plugins/typescript",
-      "description": "Skills for TypeScript upgrades, project setup, strictness, ESM, and builds."
+      "description": "Skills for TypeScript upgrades, project setup, strictness, ESM, declaration publishing, and builds."
     }
   ]
 }

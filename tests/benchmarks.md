@@ -36,7 +36,7 @@ Native-quality checks and migration success are separate dimensions:
 
 - **Compile/test/runtime:** recorded compiler errors, test failures, and runtime
   assertion failures. Upgrade tasks compare these against the measured start;
-  strict-mode and build-reference reports require passing native checks and
+  strictness and project-reference reports require passing native checks and
   treat missing required evidence as failure.
 - **Lint:** if applicable, the selected lint command must actually pass; missing
   or placeholder commands must not be invented as passing checks.
@@ -53,8 +53,6 @@ grader revision; the historical table is not a claim that every saved run has
 been reverified after subsequent fixes.
 
 ## typescript-update
-
-Definition: `assets/jsupgrade_typescript.json`; benchmark `jsupgrade.typescript`.
 
 ### Upgrade task prompt
 
@@ -111,8 +109,6 @@ TypeScript declarations, not just whichever package is easiest to update.
 
 ## typescript-project-setup
 
-Definition: `assets/project_setup.json`; benchmark `project-setup`.
-
 ### Setup task prompts
 
 Each row is a separate task; the prompt is given verbatim.
@@ -167,8 +163,6 @@ functional fulfillment of every requested application feature.
 
 ## typescript-strict
 
-Definition: `assets/strict_mode.json`; benchmark `strict-mode`.
-
 ### Strict-mode task prompt
 
 > Enable TypeScript strict mode for NAME and make sure everything works afterward.
@@ -211,8 +205,6 @@ Substitute the exact `NAME` from the first column below.
   validators, and batching.
 
 ## typescript-esm
-
-Definition: `assets/cjs_to_esm.json`; benchmark `cjs-to-esm`.
 
 ### ESM task prompts
 
@@ -267,8 +259,6 @@ of the TypeScript compiler repository.
   not an additional conjunction of all those diagnostics.
 
 ## typescript-build-references
-
-Definition: `assets/build_reference.json`; benchmark `build-reference`.
 
 ### Project-reference task prompts
 
@@ -341,9 +331,9 @@ exclusion in both browser runs; do not claim that excluded test was verified.
 
 ## typescript-build-project
 
-Definition: `assets/scenario_expansion.json`; benchmark `scenario-expansion`.
-This measures the upstream build helper during heterogeneous modernization tasks.
-There is no separate "build this project" task prompt in this cohort.
+This general build skill is evaluated during varied modernization tasks.
+It remains in the `typescript` plugin for now and may move to a separate
+`typescript-agent` plugin.
 
 ### Build-helper task prompts
 
@@ -390,10 +380,7 @@ the full historical result cannot be recreated from these four public cases.
   package. The compact score is task-success pass rate, not native-build pass
   rate or a separate evaluation of build-helper correctness.
 
-## typescript-publish-types (upstream only)
-
-Definition: `assets/publish_types.json`; benchmark `publish-types`.
-This skill is present in the source results but is not distributed in this plugin.
+## typescript-publish-types
 
 ### Publication task prompt
 

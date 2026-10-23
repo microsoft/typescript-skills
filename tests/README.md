@@ -26,9 +26,8 @@ standalone skill files, and **none of these numbers evaluates this PR's stubs**.
 | typescript-build-references | 5.0/5.0 | +317.2% | +370.9% | +100.0 pp (0 -> 100%) |
 | typescript-build-project | 3.3/4.7 | +34.0% | +63.7% | 0.0 pp (71.7 -> 71.7%) |
 
-`typescript-publish-types` is included to preserve the upstream comparison; it is
-not one of the six skills distributed by this plugin. The build-project result
-comes from mixed modernization tasks, not a dedicated build-only benchmark.
+`typescript-build-project` is a general build skill, evaluated during varied
+modernization tasks. It may move to a separate `typescript-agent` plugin.
 Its historical cohort includes one non-public case, so the result is not a
 public-only comparison.
 
@@ -54,27 +53,6 @@ public-only comparison.
   followed by unaided and product-assisted pass rates. The benchmark-specific
   pass rules are in the catalog; the score is not the average of every
   intermediate verifier dimension or every RewardKit reward.
-
-### Provenance and limitations
-
-The source is the supplied `jsts-chat-features` `docs/dashboard.md` snapshot,
-whose SHA-256 is
-`977519931456d5bc972d9156e584b20b31237d51a195ee5096b1369ac6450fd3`.
-The table is transcribed, not recomputed from newer runs. It does not identify
-exact product/skill revisions, host version, run IDs, per-model exclusions, or
-uncertainty estimates; those are gaps, not evidence of repeatability.
-
-The catalog describes the separately maintained definitions and grader source
-inspected at experiment revision
-`8f1fc8fc43b6d9f5c276e3912e35d33106499a40`. Definitions and grader fixes can be
-newer than the dashboard's underlying runs. In particular, do not infer that
-the displayed scores were rerun under every grader described here. Changed
-in-container graders require verification of the original submissions again;
-collecting saved grades or running a new agent attempt is not that verification.
-
-These small, heterogeneous cohorts are a first cut for deciding what to evaluate
-next, not a claim of general skill effectiveness. No model benchmarks were
-executed while importing this documentation.
 
 ## Updating results
 
