@@ -22,7 +22,8 @@ plugins/
         scripts/                     Optional executable helpers
         assets/                      Optional supporting files
 tests/
-  README.md                          Evaluation status and reporting format
+  README.md                          Results, methodology, and reporting format
+  benchmarks.md                      Task prompts, repository pins, and graders
 eng/
   check-skills.mjs                    Repo structure checker
   check-skills.test.mjs               Checker regression tests
@@ -50,7 +51,9 @@ Do not add empty `scripts/`, `references/`, or `assets/` directories.
 Evaluation tooling and benchmark fixtures are maintained separately from the
 distributed skills. There is not yet a runnable public evaluation suite in this
 repository; do not assume contributors can clone and run one.
-See [tests/README.md](tests/README.md) for the reporting format.
+See [tests/README.md](tests/README.md) for results and the reporting format, and
+[tests/benchmarks.md](tests/benchmarks.md) for existing task specifications and
+what to record when proposing a new benchmark.
 
 ### Invocation control
 

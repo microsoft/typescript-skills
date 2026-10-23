@@ -1,6 +1,6 @@
 {
   "name": "typescript-skills",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "description": "Development checks for the TypeScript agent skills marketplace.",
   "license": "MIT",

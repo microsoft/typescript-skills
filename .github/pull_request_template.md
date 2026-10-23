@@ -1,5 +1,3 @@
-<!-- markdownlint-disable MD041 -->
-
 ## Summary
 
 <!-- Explain the change and its intended outcome. -->
