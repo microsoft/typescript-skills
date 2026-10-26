@@ -1,0 +1,125 @@
+{
+  "version": 1,
+  "projectType": "cli",
+  "workspaceRoot": "../..",
+  "categories": {
+    "typecheck": {
+      "status": "covered"
+    },
+    "lint": {
+      "status": "covered"
+    },
+    "build": {
+      "status": "covered"
+    },
+    "test": {
+      "status": "covered"
+    },
+    "package": {
+      "status": "out-of-scope",
+      "reason": "The change does not affect publishing; packaging has side effects."
+    },
+    "runtime": {
+      "status": "covered"
+    }
+  },
+  "setup": [
+    {
+      "command": "yarn",
+      "args": [
+        "workspace",
+        "@example/shared",
+        "build"
+      ],
+      "cwd": "../..",
+      "timeoutSeconds": 300
+    }
+  ],
+  "checks": [
+    {
+      "name": "typecheck",
+      "category": "typecheck",
+      "kind": "process",
+      "command": "yarn",
+      "args": [
+        "tsc",
+        "--noEmit",
+        "-p",
+        "tsconfig.json"
+      ],
+      "verificationMethod": "exit-code",
+      "expected": "0",
+      "timeoutSeconds": 300
+    },
+    {
+      "name": "lint",
+      "category": "lint",
+      "kind": "process",
+      "cwd": "../..",
+      "command": "yarn",
+      "args": [
+        "eslint",
+        "packages/cli/src"
+      ],
+      "verificationMethod": "exit-code",
+      "expected": "0",
+      "timeoutSeconds": 300
+    },
+    {
+      "name": "format-check",
+      "category": "lint",
+      "kind": "process",
+      "cwd": "../..",
+      "command": "yarn",
+      "args": [
+        "prettier",
+        "--check",
+        "packages/cli/src",
+        "packages/cli/build.mts"
+      ],
+      "verificationMethod": "exit-code",
+      "expected": "0",
+      "timeoutSeconds": 180
+    },
+    {
+      "name": "build",
+      "category": "build",
+      "kind": "process",
+      "command": "yarn",
+      "args": [
+        "build"
+      ],
+      "verificationMethod": "exit-code",
+      "expected": "0",
+      "timeoutSeconds": 300
+    },
+    {
+      "name": "unit-tests",
+      "category": "test",
+      "kind": "process",
+      "command": "yarn",
+      "args": [
+        "test"
+      ],
+      "env": {
+        "CI": "true"
+      },
+      "verificationMethod": "exit-code",
+      "expected": "0",
+      "timeoutSeconds": 600
+    },
+    {
+      "name": "cli-help",
+      "category": "runtime",
+      "kind": "process",
+      "command": "node",
+      "args": [
+        "dist/cli.js",
+        "--help"
+      ],
+      "verificationMethod": "exit-code",
+      "expected": "0",
+      "timeoutSeconds": 30
+    }
+  ]
+}

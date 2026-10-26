@@ -6,18 +6,22 @@ Skills use the [Agent Skills](https://agentskills.io) format.
 
 ## What's included
 
-The `typescript` plugin currently includes one skill:
+The `typescript` plugin currently includes three skills:
 
 | Skill | Purpose |
 | --- | --- |
+| [dependency-security](plugins/typescript/skills/dependency-security/SKILL.md) | Fix vulnerable npm, Yarn, or pnpm dependencies in every affected `package.json`, not only the lockfile. |
 | [typescript-project-setup](plugins/typescript/skills/typescript-project-setup/SKILL.md) | Create a new TypeScript project with a suitable configuration. |
+| [typescript-project-validate](plugins/typescript/skills/typescript-project-validate/SKILL.md) | Record a repository's own checks before a build, tooling, module-format, or dependency change and report regressions and weakened configuration after it. |
 
-The skill provides instructions for installing TypeScript, configuring a new
-project, and setting up builds. Automatic invocation is not disabled.
+The project setup skill provides instructions for installing TypeScript,
+configuring a new project, and setting up builds. `typescript-project-validate`
+includes a dependency-free Node.js validation runner, plan examples, and
+reference guides for modernization tasks.
 
 ## Installation
 
-The following commands install the plugin and its project setup skill.
+The following commands install the plugin and its three skills.
 
 ### Copilot CLI and Claude Code
 
@@ -45,7 +49,7 @@ For VS Code versions supporting agent plugins, enable plugin discovery in user s
 }
 ```
 
-Use `/plugins` in Copilot Chat to browse the marketplace and install `typescript`.
+Use `/plugins` in Copilot Chat to browse and install `typescript`.
 
 ### Codex CLI
 
@@ -79,7 +83,7 @@ linting. It does not execute or evaluate the skills in an agent host.
 See [CONTRIBUTING.md](CONTRIBUTING.md) for authoring and manual versioning,
 and [tests/README.md](tests/README.md) for the initial benchmark results.
 The results describe upstream experiments, not evaluations of the standalone
-skill distributed in this repository.
+skills distributed in this repository.
 There is no dashboard, scheduled agent evaluation, or automatic release process.
 
 ## License
