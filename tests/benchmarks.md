@@ -1,8 +1,8 @@
 # Benchmark catalog
 
 These are the benchmark definitions behind the upstream experiments summarized
-in [Initial results](README.md#initial-results), not tests of the current skill
-stubs. Prompts, public source pins, environments, and success criteria are
+in [Initial results](README.md#initial-results), not tests of the current
+standalone plugin. Prompts, public source pins, environments, and success criteria are
 recorded here so contributors can understand the tasks and specify comparable
 ones. The executable harness, per-repository command plans, measured starts, and
 reference solutions remain outside this repository.
