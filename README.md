@@ -4,31 +4,31 @@ Skills for coding agents working with TypeScript, JavaScript, and Node.js.
 The marketplace and plugin layout follows [dotnet/skills](https://github.com/dotnet/skills).
 Skills use the [Agent Skills](https://agentskills.io) format.
 
-> **Work in progress:** all seven skills are stubs, not usable task
-> guidance. Automatic invocation is disabled. Explicitly invoking a stub only
+> **Work in progress:** `typescript-publish-types` is implemented. The other six
+> skills remain stubs with automatic invocation disabled; explicitly invoking one only
 > reports that it is not implemented.
 
 ## What's included
 
 The initial `typescript` plugin groups the following skills:
 
-| Skill | Intended purpose |
-| --- | --- |
-| [typescript-update](plugins/typescript/skills/typescript-update/SKILL.md) | Update to TypeScript 7. |
-| [typescript-project-setup](plugins/typescript/skills/typescript-project-setup/SKILL.md) | Create a new TypeScript project with a suitable configuration. |
-| [typescript-strict](plugins/typescript/skills/typescript-strict/SKILL.md) | Enable `strict` and fix the resulting errors. |
-| [typescript-esm](plugins/typescript/skills/typescript-esm/SKILL.md) | Switch from CommonJS to ESM and fix errors. |
-| [typescript-publish-types](plugins/typescript/skills/typescript-publish-types/SKILL.md) | Publish TypeScript declarations that consumers can resolve from the packed package. |
-| [typescript-build-references](plugins/typescript/skills/typescript-build-references/SKILL.md) | Add project references and incremental builds to a monorepo. |
-| [typescript-build-project](plugins/typescript/skills/typescript-build-project/SKILL.md) | Build a complex TypeScript project correctly. |
+| Skill | Purpose | Status |
+| --- | --- | --- |
+| [typescript-update](plugins/typescript/skills/typescript-update/SKILL.md) | Update to TypeScript 7. | Stub |
+| [typescript-project-setup](plugins/typescript/skills/typescript-project-setup/SKILL.md) | Create a new TypeScript project with a suitable configuration. | Stub |
+| [typescript-strict](plugins/typescript/skills/typescript-strict/SKILL.md) | Enable `strict` and fix the resulting errors. | Stub |
+| [typescript-esm](plugins/typescript/skills/typescript-esm/SKILL.md) | Switch from CommonJS to ESM and fix errors. | Stub |
+| [typescript-publish-types](plugins/typescript/skills/typescript-publish-types/SKILL.md) | Publish TypeScript declarations that consumers can resolve from the packed package. | Implemented |
+| [typescript-build-references](plugins/typescript/skills/typescript-build-references/SKILL.md) | Add project references and incremental builds to a monorepo. | Stub |
+| [typescript-build-project](plugins/typescript/skills/typescript-build-project/SKILL.md) | Build a complex TypeScript project correctly. | Stub |
 
 `typescript-build-project` is a general build skill. It remains in this plugin
 for now and may move to a separate `typescript-agent` plugin.
 
 ## Installation
 
-The following commands install the scaffold for development. They do not turn
-the stubs into implemented skills.
+The following commands install the plugin, including `typescript-publish-types`.
+The remaining skills are development stubs, not usable task guidance.
 
 ### Copilot CLI and Claude Code
 
@@ -90,7 +90,7 @@ linting. It does not execute or evaluate the skills in an agent host.
 See [CONTRIBUTING.md](CONTRIBUTING.md) for authoring and manual versioning,
 and [tests/README.md](tests/README.md) for the initial benchmark results and
 [benchmark catalog](tests/benchmarks.md). The results describe upstream
-experiments, not evaluations of the stubs in this repository.
+experiments, not evaluations of this standalone plugin.
 There is no dashboard, scheduled agent evaluation, or automatic release process.
 
 ## License
