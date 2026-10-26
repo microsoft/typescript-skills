@@ -83,7 +83,8 @@ test("rejects unlisted plugins", (t) => {
 test("rejects plugin compatibility version drift", (t) => {
   const root = fixture(t);
   changeJson(root, "plugins/typescript/.codex-plugin/plugin.json", (value) => {
-    value.version = "0.3.0";
+    const [major, minor, patch] = value.version.split(".").map(Number);
+    value.version = `${major + 1}.${minor}.${patch}`;
   });
   assert.throws(() => checkRepository(root), /version differs from plugin.json/);
 });

@@ -90,9 +90,7 @@ linting. It does not execute or evaluate the skills in an agent host.
 See [CONTRIBUTING.md](CONTRIBUTING.md) for authoring and manual versioning,
 and [tests/README.md](tests/README.md) for the initial benchmark results and
 [benchmark catalog](tests/benchmarks.md). The results describe upstream
-experiments, not evaluations of this standalone plugin. The
-[strict skill provenance](tests/README.md#typescript-strict-import-provenance)
-records the imported revision and evaluation limitations.
+experiments, not evaluations of this standalone plugin.
 There is no dashboard, scheduled agent evaluation, or automatic release process.
 
 ## License

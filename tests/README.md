@@ -55,36 +55,6 @@ public-only comparison.
   pass rules are in the catalog; the score is not the average of every
   intermediate verifier dimension or every RewardKit reward.
 
-## typescript-strict import provenance
-
-The implemented skill was imported from `jsts-chat-features`, branch
-`sandersn/strict-loop-iter0-fixes`, at commit
-`00f977880cf50d0d99bab115a1159e23f53050bd`. Its source path is
-`skills/typescript-strict/SKILL.md`; the only import changes normalize Markdown
-list markers and indentation for this repository's lint rules. There are no
-supporting files in the source skill directory. The source's automatic-selection
-metadata is preserved; the other six skills remain manual-only stubs.
-
-The maintainer-designated evaluation configuration is
-`evals/jsts/strict/first/iter1/eval.json` in the separate evaluation workspace,
-named `jsts-strict-mode-first-iter1`. It records the `strict-mode` benchmark using
-the `vscode` agent and the `jsts-chat-features` product scenario:
-
-| Model | Baseline run | Product run |
-| --- | --- | --- |
-| `gpt-6-luna` | `2026-10-19-1854_strict-mode_2026101966767637` | `2026-10-19-2234_jsts-chat-features_2026101977832474` |
-| `gpt-6.1-sol` | `2026-10-19-1904_strict-mode_2026101967248308` | `2026-10-19-2216_jsts-chat-features_2026101977845656` |
-| `claude-haiku-5.5` | `2026-10-19-1907_strict-mode_2026101967014298` | `2026-10-19-2302_jsts-chat-features_2026101980319504` |
-
-These IDs establish provenance, not new pass rates. The configuration does not
-pin the evaluated product commit, host version, grader revision, invocation
-mode, or outcomes. Its reused preflight explicitly covers the parent product
-revision, not the new skill. The current source revision therefore cannot be
-claimed to match the evaluated revision. No fresh agent task or routing
-evaluation, host installation smoke test, or benchmark regrade was run for this
-import. `npm run validate` checks the integration structurally; it does not
-establish skill quality or automatic-routing behavior.
-
 ## Updating results
 
 Keep the summary table manual for now. For a new result, record the evaluated
