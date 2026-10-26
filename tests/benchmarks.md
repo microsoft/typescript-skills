@@ -1,8 +1,8 @@
 # Benchmark catalog
 
 These are the benchmark definitions behind the upstream experiments summarized
-in [Initial results](README.md#initial-results), not tests of the current skill
-stubs. Prompts, public source pins, environments, and success criteria are
+in [Initial results](README.md#initial-results), not tests of the current
+standalone plugin. Prompts, public source pins, environments, and success criteria are
 recorded here so contributors can understand the tasks and specify comparable
 ones. The executable harness, per-repository command plans, measured starts, and
 reference solutions remain outside this repository.
@@ -329,9 +329,9 @@ Lage build. VueUse retains `test:all` with Chromium and WebKit, no file
 parallelism, and the pre-existing named `useStorageAsync > onReadyByPromise`
 exclusion in both browser runs; do not claim that excluded test was verified.
 
-## typescript-build-project
+## typescript-project-validate
 
-This general build skill is evaluated during varied modernization tasks.
+This general validation skill is evaluated during varied modernization tasks.
 It remains in the `typescript` plugin for now and may move to a separate
 `typescript-agent` plugin.
 

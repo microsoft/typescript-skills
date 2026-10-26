@@ -14,7 +14,8 @@ These are the maintainer-provided, provisional cross-model averages from the
 upstream `jsts-chat-features` dashboard. The comparison is the VS Code agent
 without that product versus the same agent with the product, which includes
 skills and other extension functionality. It is not an isolated test of these
-standalone skill files, and **none of these numbers evaluates this PR's stubs**.
+standalone skill files, and **none of these numbers evaluates this standalone
+plugin**.
 
 | Skill | skill usage/n | Tokens | Time | Score |
 | --- | ---: | ---: | ---: | --- |
@@ -24,12 +25,6 @@ standalone skill files, and **none of these numbers evaluates this PR's stubs**.
 | typescript-esm | 6.0/6.0 | +21.4% | +74.1% | 0.0 pp (66.7 -> 66.7%) |
 | typescript-publish-types | 5.0/5.0 | +125.6% | +99.1% | +33.3 pp (46.7 -> 80%) |
 | typescript-build-references | 5.7/5.7 | +84.5% | +136.7% | +52.2 pp (30 -> 82.2%) |
-| typescript-build-project | 3.3/4.7 | +34.0% | +63.7% | 0.0 pp (71.7 -> 71.7%) |
-
-`typescript-build-project` is a general build skill, evaluated during varied
-modernization tasks. It may move to a separate `typescript-agent` plugin.
-Its historical cohort includes one non-public case, so the result is not a
-public-only comparison.
 
 ### Reading the table
 

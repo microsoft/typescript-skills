@@ -1,0 +1,108 @@
+{
+  "version": 1,
+  "projectType": "webapp",
+  "categories": {
+    "typecheck": {
+      "status": "covered"
+    },
+    "lint": {
+      "status": "covered"
+    },
+    "build": {
+      "status": "covered"
+    },
+    "test": {
+      "status": "covered"
+    },
+    "package": {
+      "status": "unavailable",
+      "reason": "This application deploys build output and has no separate packaging command."
+    },
+    "runtime": {
+      "status": "covered"
+    }
+  },
+  "setup": [],
+  "devServer": {
+    "command": "npm",
+    "args": [
+      "run",
+      "dev",
+      "--",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "4173"
+    ],
+    "url": "http://127.0.0.1:4173/",
+    "readyTimeoutSeconds": 120
+  },
+  "checks": [
+    {
+      "name": "typecheck",
+      "category": "typecheck",
+      "kind": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "check-types"
+      ],
+      "verificationMethod": "exit-code",
+      "expected": "0",
+      "timeoutSeconds": 180
+    },
+    {
+      "name": "lint",
+      "category": "lint",
+      "kind": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "lint"
+      ],
+      "verificationMethod": "exit-code",
+      "expected": "0",
+      "timeoutSeconds": 180
+    },
+    {
+      "name": "production-build",
+      "category": "build",
+      "kind": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "build"
+      ],
+      "verificationMethod": "exit-code",
+      "expected": "0",
+      "timeoutSeconds": 300
+    },
+    {
+      "name": "unit-tests",
+      "category": "test",
+      "kind": "process",
+      "command": "npm",
+      "args": [
+        "test",
+        "--",
+        "--run"
+      ],
+      "env": {
+        "CI": "true"
+      },
+      "verificationMethod": "exit-code",
+      "expected": "0",
+      "timeoutSeconds": 300
+    },
+    {
+      "name": "home-route",
+      "category": "runtime",
+      "kind": "http",
+      "url": "http://127.0.0.1:4173/",
+      "verificationMethod": "http-status",
+      "expected": "200",
+      "timeoutSeconds": 30
+    }
+  ]
+}
+
