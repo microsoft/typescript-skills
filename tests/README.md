@@ -25,6 +25,12 @@ plugin**.
 | typescript-esm | 6.0/6.0 | +21.4% | +74.1% | 0.0 pp (66.7 -> 66.7%) |
 | typescript-publish-types | 5.0/5.0 | +125.6% | +99.1% | +33.3 pp (46.7 -> 80%) |
 | typescript-build-references | 5.7/5.7 | +84.5% | +136.7% | +52.2 pp (30 -> 82.2%) |
+| typescript-project-validate | 4.7/4.7 | +89.2% | +106.3% | +21.7 pp (71.7 -> 93.3%) |
+
+`typescript-project-validate` is a general validation skill, evaluated during
+varied modernization tasks; the product run also includes `dependency-security`.
+It may move to a separate `typescript-agent` plugin. Its cohort includes one
+non-public case, so the result is not a public-only comparison.
 
 ### Reading the table
 
