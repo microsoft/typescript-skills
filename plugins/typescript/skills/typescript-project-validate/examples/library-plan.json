@@ -1,0 +1,110 @@
+{
+  "version": 1,
+  "projectType": "library",
+  "categories": {
+    "typecheck": {
+      "status": "covered"
+    },
+    "lint": {
+      "status": "covered"
+    },
+    "build": {
+      "status": "covered"
+    },
+    "test": {
+      "status": "covered"
+    },
+    "package": {
+      "status": "covered"
+    },
+    "runtime": {
+      "status": "covered"
+    }
+  },
+  "setup": [],
+  "checks": [
+    {
+      "name": "typecheck",
+      "category": "typecheck",
+      "kind": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "check-types"
+      ],
+      "verificationMethod": "exit-code",
+      "expected": "0",
+      "timeoutSeconds": 180
+    },
+    {
+      "name": "lint",
+      "category": "lint",
+      "kind": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "lint"
+      ],
+      "verificationMethod": "exit-code",
+      "expected": "0",
+      "timeoutSeconds": 180
+    },
+    {
+      "name": "build",
+      "category": "build",
+      "kind": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "build"
+      ],
+      "verificationMethod": "exit-code",
+      "expected": "0",
+      "timeoutSeconds": 300
+    },
+    {
+      "name": "unit-tests",
+      "category": "test",
+      "kind": "process",
+      "command": "npm",
+      "args": [
+        "test",
+        "--",
+        "--run"
+      ],
+      "env": {
+        "CI": "true"
+      },
+      "verificationMethod": "exit-code",
+      "expected": "0",
+      "timeoutSeconds": 300
+    },
+    {
+      "name": "package-dry-run",
+      "category": "package",
+      "kind": "process",
+      "command": "npm",
+      "args": [
+        "pack",
+        "--dry-run"
+      ],
+      "verificationMethod": "exit-code",
+      "expected": "0",
+      "timeoutSeconds": 180
+    },
+    {
+      "name": "public-entry-loads",
+      "category": "runtime",
+      "kind": "process",
+      "command": "node",
+      "args": [
+        "-e",
+        "import('./dist/index.js')"
+      ],
+      "verificationMethod": "exit-code",
+      "expected": "0",
+      "timeoutSeconds": 30
+    }
+  ]
+}
+
