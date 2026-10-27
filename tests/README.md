@@ -14,14 +14,15 @@ These are the maintainer-provided, provisional cross-model averages from the
 upstream `jsts-chat-features` dashboard. The comparison is the VS Code agent
 without that product versus the same agent with the product, which includes
 skills and other extension functionality. It is not an isolated test of these
-standalone skill files, and **none of these numbers evaluates this PR's stubs**.
+standalone skill files, and **none of these numbers evaluates this standalone
+plugin**.
 
 | Skill | skill usage/n | Tokens | Time | Score |
 | --- | ---: | ---: | ---: | --- |
 | typescript-update | 14.3/14.3 | +131.6% | +277.6% | +25.6 pp (9.2 -> 34.8%) |
 | typescript-project-setup | 6.0/6.0 | +1.6% | -12.1% | +38.9 pp (11.1 -> 50.0%) |
 | typescript-strict | 8.3/8.3 | +162.0% | +270.4% | +29.1 pp (11.1 -> 40.2%) |
-| typescript-esm | 6.0/6.0 | +21.4% | +74.1% | 0.0 pp (66.7 -> 66.7%) |
+| typescript-esm | 5.3/5.7 | +36.1% | +31.9% | +5.6 pp (72.2 -> 77.8%) |
 | typescript-publish-types | 5.0/5.0 | +125.6% | +99.1% | +33.3 pp (46.7 -> 80%) |
 | typescript-build-references | 5.7/5.7 | +84.5% | +136.7% | +52.2 pp (30 -> 82.2%) |
 | typescript-build-project | 3.3/4.7 | +34.0% | +63.7% | 0.0 pp (71.7 -> 71.7%) |
@@ -30,6 +31,10 @@ standalone skill files, and **none of these numbers evaluates this PR's stubs**.
 modernization tasks. It may move to a separate `typescript-agent` plugin.
 Its historical cohort includes one non-public case, so the result is not a
 public-only comparison.
+
+The `typescript-esm` row comes from a later run of the same upstream comparison,
+using the product revision this skill was imported from. In that run, GPT-6.1
+Sol had five matched tasks because one task was not graded.
 
 ### Reading the table
 
