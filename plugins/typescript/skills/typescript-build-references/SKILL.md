@@ -8,19 +8,16 @@ Your role is to add a TypeScript build-mode (project reference) graph to an exis
 **Definition of done.** You are finished only when:
 
 * the repo's existing root `build` or `typecheck` script (or every in-scope package's `build`) runs the new `tsc -b` graph,
-* `scripts/check-reference-graph.mjs` (below) reports no errors, and
+* in a workspace monorepo, `workspaces-to-typescript-project-references --check` (below) reports no differences, and
 * after the frozen install, the repo's own root `build`, `typecheck`, and full test surface pass **with `isolatedDeclarations` enabled** (when it was requested). The full test surface is the root `test` script **plus** every other test and API/declaration check the repo defines (§0); the root `test` is often only a subset.
 
-Handwritten `node -e` / `JSON.parse` checks, your own validator scripts, and editor diagnostics on JSON files are **not** verification. The shipped `check-reference-graph.mjs` is a required lint in addition to the native build, not a substitute for it.
+Handwritten `node -e` / `JSON.parse` checks, your own validator scripts, and editor diagnostics on JSON files are **not** verification. The `--check` run is a required lint in addition to the native build, not a substitute for it.
 Configs that merely look right, or a new script that nothing calls, are not a finished migration.
 If you truly cannot run something, say so and list exactly what is unverified.
 
-**Shipped scripts.** This skill's directory (the folder containing this SKILL.md, written `<skill-dir>` below) has a `scripts/` folder with plain Node scripts that load the repo's own installed `typescript` and need no network. Run them with `node` from the repo root after installing:
+**Reference check.** In a workspace monorepo (npm/yarn/pnpm/lerna workspaces), check that each package's `references` match its workspace dependencies with [`@monorepo-utils/workspaces-to-typescript-project-references`](https://github.com/azu/monorepo-utils/tree/master/packages/@monorepo-utils/workspaces-to-typescript-project-references), run from the repo root after installing:
 
-* `node <skill-dir>/scripts/check-reference-graph.mjs [-p <solution tsconfig>]`: package-boundary, input-coverage, reference, and wiring lint for the `tsc -b` graph (§3).
-* `node <skill-dir>/scripts/add-missing-annotations.mjs -p <project tsconfig>`: applies TypeScript's "Add all missing type annotations" fix for `isolatedDeclarations` (§5). Exit code 0 means every fix applied cleanly (remaining errors are listed for you to fix); 1 means a fix failed or a file was restored because the edit would break its syntax (see its `Fix failed:` lines).
-
-`<skill-dir>` is not part of the repository. If the repo's lint or format check reports files under it, exclude them with that tool's ignore flag (e.g. `--ignore-pattern '<skill-dir>/**'`). Don't edit repo configs for them, don't fix them, and don't count them as regressions.
+* `npx --yes @monorepo-utils/workspaces-to-typescript-project-references --check`: compares each workspace package's `tsconfig.json` `references` with the workspace packages it depends on in `package.json`, and exits 1 if they differ (§3). Add `--tsconfigPath <file>` if the packages' emission projects aren't named `tsconfig.json`. Don't add the tool to the repo's dependencies.
 
 ## 0. Before editing anything: install, then record a baseline
 
@@ -62,14 +59,7 @@ Package boundaries are hard rules:
 
 * `include`, `files`, `exclude`, `outDir`, `rootDir`, `baseUrl`, and `tsBuildInfoFile` in an inherited config are resolved relative to the config that **declares** them. A shared `../tsconfig.base.json` with `"include": ["src"]` points at the base directory's `src`, not each package's. Keep path-bearing settings package-local, or use `${configDir}` deliberately (TS 5.5+).
 * Every `extends` target must exist. Validate with the compiler, not `JSON.parse`: tsconfig is JSONC and supports `extends` arrays.
-* After every graph edit, and again before finishing, run `node <skill-dir>/scripts/check-reference-graph.mjs` from the repo root. Add `-p <solution tsconfig>` until a root script runs `tsc -b`. Use `--base <ref>` if you have committed during the task, so the original inputs come from the pre-task commit. It reports:
-  * which root script reaches `tsc -b`;
-  * projects that include another package's files or set `rootDir` above their package;
-  * each package's original library files (tracked in git) that none of its own projects include;
-  * library projects that aren't `composite` or don't enable `isolatedDeclarations`;
-  * missing direct `references`, derived from `dependencies`/`peerDependencies`/`optionalDependencies` and from imports.
-
-   Fix every ERROR by changing the graph, never by moving, deleting, or excluding sources. Review each WARN.
+* In a workspace monorepo, after every graph edit and again before finishing, run `npx --yes @monorepo-utils/workspaces-to-typescript-project-references --check` from the repo root. Fix every difference by changing `references`, never by moving, deleting, or excluding sources. It only compares `references` with `package.json` workspace dependencies; check package boundaries, input coverage, `composite`, and import-only edges yourself (§2).
 * To debug a single project, use `tsc --showConfig -p <project>` or `tsc -p <project> --listFilesOnly`.
 
 ## 4. Wire it into the repo's real build entry points
@@ -87,13 +77,11 @@ Package boundaries are hard rules:
 * **Every declaration-emission path reads the option.** Bundlers and wrappers (`tsdown`/`rolldown-plugin-dts`, `tsup`, `unbuild`, `vite-plugin-dts`, `preconstruct`, `vue-tsc`, framework tooling) run their own declaration emit with the package's tsconfig, so enabling the flag can break them even when `tsc -b` passes. After enabling it, run the repo's real `build`, not only `tsc -b`.
 * **Every declaration-emission path may also print declarations differently.** For example, tsdown/`rolldown-plugin-dts` switches from the `tsc` declaration generator to `oxc` when `isolatedDeclarations` is on. That changes the emitted `.d.ts` text (quote style, overload listing, ordering) even when the types are identical, so expect API/declaration snapshot tests to change (§6).
 * Fix the resulting errors (TS9007, TS9010, TS9011, TS9038, ...) until the **enabled** build succeeds. Work package by package in dependency order. Hundreds of annotation errors are normal for this task and are the work itself; don't stop at "this is a larger source change than configuration". A build with the option disabled or with `--noCheck` is a diagnostic only.
-* **Automate the annotations first; don't hand-annotate file by file.** For each library project, in dependency order, run `node <skill-dir>/scripts/add-missing-annotations.mjs -p <package>/tsconfig.json`. It applies TypeScript's own "Add all missing type annotations" fix across the whole project, inserting the type the compiler inferred (what the old `.d.ts` contained). It works even before the tsconfig enables the option. Then:
-  * if it exits 1, read its `Fix failed:` lines; a file it restored still needs annotating (by hand, or after fixing the reported problem);
-  * review the annotations it lists: replace long structural or `import("…")` types with an existing named type when equivalent, and never widen to `any`/`unknown`;
-  * fix any new type errors it reports in changed files (usually a type that must be exported or imported);
-  * hand-fix only the remaining errors it prints, following §6;
+* **Add the missing annotations by hand.** For each library project, in dependency order, build it with the option enabled and annotate each reported site. Write the smallest readable annotation that is faithful to the inferred type (what the old `.d.ts` contained):
+  * prefer an existing named type over a long structural or `import("…")` type, and never widen to `any`/`unknown` (§6);
+  * fix any new type errors in changed files (usually a type that must be exported or imported);
   * run the repo's formatter on the changed files once;
-  * **run the repo's API/declaration snapshot tests from §0 immediately after the first annotation pass**, not only at the end, and handle any differences as in §6. The script imports the named types it inserts, so declarations that printed `import("m").T` may now print `T`.
+  * **run the repo's API/declaration snapshot tests from §0 immediately after the first annotation pass**, not only at the end, and handle any differences as in §6. Importing named types for annotations can change how declarations print, so declarations that printed `import("m").T` may now print `T`.
 * Check inherited options that conflict. **TS5053** (`allowJs` cannot be specified with `isolatedDeclarations`): if the library's emission project has no JavaScript inputs, set `"allowJs": false` on that project and keep any JS files (configs, scripts) checked by a separate project or the existing broad checker.
 * Runtime/tooling that consumes `tsconfig` (e.g. `ts-node`, test runners, scripts) may conflict with `composite`/`declaration`/`isolatedDeclarations` (TS5069 and similar). Give those tools a separate transpile/tooling configuration or override instead of removing the option from library emission.
 * Never finish with `isolatedDeclarations` enabled in a config that the native build reads while that build still fails.
@@ -124,7 +112,7 @@ An annotation must describe the type that was inferred, not a looser one.
 
 Run, in order, and record which actually completed:
 
-* `node <skill-dir>/scripts/check-reference-graph.mjs` with no errors.
+* In a workspace monorepo, `npx --yes @monorepo-utils/workspaces-to-typescript-project-references --check` with no differences.
 * The repo's formatter (write mode) once on the files you changed, then its lint in **check mode**, before the final gates, instead of repeated lint runs. Don't run repo-wide fixers. If you do use a lint fixer, inspect `git diff` afterwards and revert every change that is not part of the migration (removed casts, rewritten imports, unrelated files).
 * A clean reference build (`tsc -b --verbose`, after removing outputs and build-info), then an immediate second build that reports every project up to date. Its output already shows build order and incrementality; don't add temporary probe edits or exports to test rebuilds.
 * The repo's native root `build`, `typecheck`, and full test surface from §0, including the API/declaration snapshot tests (uncached), with `isolatedDeclarations` enabled, plus any runtime/CLI smoke tests that existed before.

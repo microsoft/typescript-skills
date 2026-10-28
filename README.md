@@ -22,9 +22,10 @@ The initial `typescript` plugin groups the following skills:
 | [typescript-build-references](plugins/typescript/skills/typescript-build-references/SKILL.md) | Add project references, incremental builds, and declaration emission without breaking existing builds or public APIs. | Implemented |
 | [typescript-build-project](plugins/typescript/skills/typescript-build-project/SKILL.md) | Build a complex TypeScript project correctly. | Stub |
 
-`typescript-build-references` includes helper scripts for checking reference
-graphs and applying TypeScript's missing-annotation fixes. They use the target
-repository's installed TypeScript; the skill documents their commands and requirements.
+`typescript-build-references` has no bundled scripts. In workspace monorepos it
+checks references with
+[`workspaces-to-typescript-project-references --check`](https://github.com/azu/monorepo-utils/tree/master/packages/@monorepo-utils/workspaces-to-typescript-project-references),
+run through `npx`, and it adds `isolatedDeclarations` annotations by hand.
 
 `typescript-build-project` is a general build skill. It remains in this plugin
 for now and may move to a separate `typescript-agent` plugin.
