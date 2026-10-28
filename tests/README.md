@@ -4,10 +4,6 @@ Benchmarks and evaluation tooling are maintained separately from the distributed
 skills. This repository does not currently include a runnable public evaluation
 suite. The structural checker tests under `eng/` are not skill evaluations.
 
-The [benchmark catalog](benchmarks.md) records actual task prompts, pinned public
-repositories, toolchains, and English descriptions of the success graders.
-It also explains how to specify a new benchmark without importing the harness.
-
 ## Initial results
 
 These are the maintainer-provided, provisional cross-model averages from the
@@ -43,16 +39,15 @@ public-only comparison.
 - **Cohort:** the reporter pairs tasks present in both arms, excludes a pair
   when either arm times out, and requires positive, finite token and elapsed-time
   measurements in both arms for this summary. Other unscorable results can also
-  be omitted. Consequently `n` need not equal the catalog size; it is not a
+  be omitted. Consequently `n` need not equal the full task count; it is not a
   number of repeated trials or an all-attempt completion rate.
 - **Tokens / Time:** for each model, percentage change in summed reported tokens
   or elapsed seconds across its matched tasks, relative to the unaided agent.
   Those percentage changes are then averaged across models. Positive means
   more tokens or more time; it is not a percentage-point change.
 - **Score:** change in complete-task pass rate, in percentage points (`pp`),
-  followed by unaided and product-assisted pass rates. The benchmark-specific
-  pass rules are in the catalog; the score is not the average of every
-  intermediate verifier dimension or every RewardKit reward.
+  followed by unaided and product-assisted pass rates. The score is not the
+  average of every intermediate verifier dimension or every RewardKit reward.
 
 ## Updating results
 

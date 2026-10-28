@@ -88,9 +88,9 @@ This runs structural plugin/skill checks, checker regression tests, and Markdown
 linting. It does not execute or evaluate the skills in an agent host.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for authoring and manual versioning,
-and [tests/README.md](tests/README.md) for the initial benchmark results and
-[benchmark catalog](tests/benchmarks.md). The results describe upstream
-experiments, not evaluations of the stubs in this repository.
+and [tests/README.md](tests/README.md) for the initial benchmark results.
+The results describe upstream experiments, not evaluations of the stubs in this
+repository.
 There is no dashboard, scheduled agent evaluation, or automatic release process.
 
 ## License
