@@ -14,7 +14,8 @@ These are the maintainer-provided, provisional cross-model averages from the
 upstream `jsts-chat-features` dashboard. The comparison is the VS Code agent
 without that product versus the same agent with the product, which includes
 skills and other extension functionality. It is not an isolated test of these
-standalone skill files, and **none of these numbers evaluates this PR's stubs**.
+standalone skill files, and **none of these numbers evaluates this standalone
+plugin**.
 
 | Skill | skill usage/n | Tokens | Time | Score |
 | --- | ---: | ---: | ---: | --- |
