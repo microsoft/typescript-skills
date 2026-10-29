@@ -2,6 +2,5 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "typescript",
   "version": "0.1.0",
-  "description": "Skills for TypeScript upgrades, project setup, strictness, ESM, declaration publishing, and builds.",
-  "skills": ["./skills/"]
+  "description": "Skills for TypeScript upgrades, project setup, strictness, ESM, declaration publishing, and builds."
 }
