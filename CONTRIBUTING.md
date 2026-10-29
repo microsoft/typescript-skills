@@ -73,8 +73,12 @@ split them. New plugins require all three plugin manifests, entries in all four
 marketplace manifests, and a README entry.
 
 The repo structure checker expects local marketplace sources at
-`./plugins/<plugin-name>` and skills at `./skills/`. Keep each plugin's name,
-version, description, and skills list consistent across its three manifests.
+`./plugins/<plugin-name>` and skills at `./skills/`. The canonical `plugin.json`
+must conform to the [Agent Plugins 1.0.0 schema](https://agent-plugins.org/schemas/1.0.0/plugin.schema.json);
+skills are discovered from the conventional `skills/` directory, not a `skills`
+manifest field. Only the Claude and Codex compatibility manifests declare
+`"skills": ["./skills/"]`. Keep each plugin's name, version, and description
+consistent across its three manifests.
 Keep marketplace names, owners, and plugin entries consistent across hosts;
 host-specific display metadata can differ.
 
@@ -92,6 +96,8 @@ npm run validate
 Individual commands are `npm run check`, `npm test`, and `npm run lint`.
 CI runs these same checks without model credentials. Static checks validate
 metadata and layout, not host installation or skill quality.
+Canonical plugin manifests are validated offline against the published Agent
+Plugins 1.0.0 schema, vendored unchanged at `eng/plugin.schema.json`.
 
 The Markdown CLI currently pins transitive parsers to release ranges that exclude
 available security fixes. The development-only overrides in `package.json`

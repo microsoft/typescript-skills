@@ -82,6 +82,48 @@ test("rejects plugin compatibility version drift", (t) => {
   assert.throws(() => checkRepository(root), /version differs from plugin.json/);
 });
 
+test("rejects missing or incorrect Agent Plugins schema identifiers", (t) => {
+  for (const schema of [undefined, "https://example.com/plugin.schema.json"]) {
+    const root = fixture(t);
+    changeJson(root, "plugins/typescript/plugin.json", (value) => {
+      if (schema === undefined) delete value.$schema;
+      else value.$schema = schema;
+    });
+    assert.throws(() => checkRepository(root), /invalid Agent Plugins manifest/);
+  }
+});
+
+test("rejects unsupported canonical manifest fields", (t) => {
+  for (const field of ["skills", "unsupported"]) {
+    const root = fixture(t);
+    changeJson(root, "plugins/typescript/plugin.json", (value) => {
+      value[field] = ["./skills/"];
+    });
+    assert.throws(() => checkRepository(root), /must NOT have additional properties/);
+  }
+});
+
+test("rejects invalid schema-defined optional metadata", (t) => {
+  const root = fixture(t);
+  changeJson(root, "plugins/typescript/plugin.json", (value) => {
+    value.author = { name: 123 };
+  });
+  assert.throws(() => checkRepository(root), /author\/name must be string/);
+});
+
+test("rejects compatibility manifests without the conventional skills path", (t) => {
+  for (const path of [".claude-plugin/plugin.json", ".codex-plugin/plugin.json"]) {
+    for (const skills of [undefined, ["./other-skills/"]]) {
+      const root = fixture(t);
+      changeJson(root, `plugins/typescript/${path}`, (value) => {
+        if (skills === undefined) delete value.skills;
+        else value.skills = skills;
+      });
+      assert.throws(() => checkRepository(root), /expected skills at \.\/skills\//);
+    }
+  }
+});
+
 test("rejects invalid versions", (t) => {
   const root = fixture(t);
   changeJson(root, "plugins/typescript/plugin.json", (value) => {
