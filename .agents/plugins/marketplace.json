@@ -1,0 +1,16 @@
+{
+  "name": "typescript-skills",
+  "owner": {
+    "name": "TypeScript Team"
+  },
+  "interface": {
+    "displayName": "TypeScript Skills"
+  },
+  "plugins": [
+    {
+      "name": "typescript",
+      "source": "./plugins/typescript",
+      "description": "Skills for TypeScript upgrades, project setup, strictness, ESM, declaration publishing, and builds."
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "name": "typescript",
+  "version": "0.1.0",
+  "description": "Skills for TypeScript upgrades, project setup, strictness, ESM, declaration publishing, and builds.",
+  "skills": ["./skills/"]
+}

@@ -1,0 +1,25 @@
+{
+  "name": "typescript-skills",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Development checks for the TypeScript agent skills marketplace.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "check": "node eng/check-skills.mjs",
+    "test": "node --test eng/check-skills.test.mjs",
+    "lint": "markdownlint --dot --ignore-path .gitignore \"**/*.md\"",
+    "validate": "npm run check && npm test && npm run lint"
+  },
+  "devDependencies": {
+    "markdownlint-cli": "0.49.1",
+    "yaml": "2.9.1"
+  },
+  "overrides": {
+    "js-yaml": "5.5.0",
+    "katex": "0.18.2",
+    "smol-toml": "1.9.1"
+  }
+}
