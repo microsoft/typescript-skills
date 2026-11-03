@@ -75,8 +75,9 @@ npm ci
 npm run validate
 ```
 
-This runs structural plugin/skill checks, checker regression tests, and Markdown
-linting. It does not execute or evaluate the skills in an agent host.
+This runs structural plugin/skill checks, checker regression tests, skill
+formatting checks under representative consumer Prettier configurations, and
+Markdown linting. It does not execute or evaluate the skills in an agent host.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for authoring and manual versioning,
 and [tests/README.md](tests/README.md) for the initial benchmark results.

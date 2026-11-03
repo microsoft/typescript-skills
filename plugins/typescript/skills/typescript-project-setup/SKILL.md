@@ -3,6 +3,8 @@ name: typescript-project-setup
 description: How to set up a new TypeScript project
 ---
 
+<!-- prettier-ignore-start -->
+
 To set up a new repo with TypeScript, follow these steps unless you have reason to deviate from them:
 
 - `npm install --save-dev typescript@latest` (or use the user's package manager of choice)
@@ -18,3 +20,5 @@ To set up a new repo with TypeScript, follow these steps unless you have reason 
 
 If you're running TypeScript code on the commandline, `tsx` is no longer necessary or recommended if node 22.18.0 or later is installed.
 Enable `erasableSyntaxOnly` and `rewriteRelativeImportExtensions` in the tsconfig and run e.g. `node src/index.ts` directly.
+
+<!-- prettier-ignore-end -->
