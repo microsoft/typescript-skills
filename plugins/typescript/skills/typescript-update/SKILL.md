@@ -18,8 +18,8 @@ Your role is to upgrade the project to the latest TypeScript version (7.x, or a 
 2. **Read the version guides before your first edit.** Always read [6to7.md](6to7.md). Also read [5to6.md](5to6.md) if starting below 6.0, and [4to5.md](4to5.md) if starting below 5.0. Treat them as checklists of changes to apply up front, not as references to consult only after something breaks.
 3. **Choose the package layout.** Run the API-consumer check in [6to7.md](6to7.md#does-the-project-need-the-typescript-api). If anything in the project or its dependencies uses the TypeScript API, use the side-by-side layout (`typescript` aliased to `@typescript/typescript6`, `@typescript/native` aliased to `typescript@7`) from the start. Otherwise install plain `typescript@7`.
 4. **Apply all config changes in one pass.** Edit `tsconfig*.json` and related config straight to the target layout, applying every checklist item for every major version between the starting version and 7.0 (e.g. `types`, `module`/`moduleResolution`, `baseUrl`/`paths`, `rootDir`, `esModuleInterop`, removed options). Update `@types/*` and TypeScript-dependent tools (see [`@types` Dependencies](#types-dependencies)).
-5. **Install the target versions once**, then typecheck with the new `tsc` and fix the errors.
-   - Do not install and build every intermediate major version. At most, you may run one optional typecheck with TypeScript 6.0 (e.g. `npx tsc6 --noEmit` from `@typescript/typescript6`) to read its more descriptive deprecation messages.
+5. **Install and test each intermediate major version in order**, then the target version, rather than jumping straight to the target (e.g. 4.x -> 5.x -> 6.x -> 7.x).
+   - At each version, typecheck with the newly installed compiler, rerun the project's baseline build, test and lint commands, and fix new errors before installing the next major version. Use the package layout chosen in step 3 when you reach the target version.
 6. **Run the [Completion Gate](#completion-gate)**, then **[Summarize](#summarize)**.
 
 ## Long-Running and Interactive Commands
