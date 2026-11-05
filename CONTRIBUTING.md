@@ -94,6 +94,15 @@ npm run validate
 ```
 
 Individual commands are `npm run check`, `npm test`, and `npm run lint`.
+`npm run lint:skills` checks shipped skill Markdown formatting with Prettier
+and runs as part of `lint`. Skill bodies use `prettier-ignore` ranges so copying
+them into a consumer repository does not cause formatting failures under the
+default, Next.js-style, or tab-width-4 configurations. To edit them, temporarily
+remove the range markers, format the file with the pinned Prettier version,
+and restore the markers around the body (after any frontmatter).
+The `proseWrap: always` check covers only the body: the ignore range cannot
+protect frontmatter, so a long description can still be rewrapped by a consumer.
+Keep shipped skill files LF; `.gitattributes` enforces their line endings.
 CI runs these same checks without model credentials. Static checks validate
 metadata and layout, not host installation or skill quality.
 Canonical plugin manifests are validated offline against the published Agent
