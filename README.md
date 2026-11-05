@@ -6,18 +6,21 @@ Skills use the [Agent Skills](https://agentskills.io) format.
 
 ## What's included
 
-The `typescript` plugin currently includes one skill:
+The `typescript` plugin currently includes two skills:
 
 | Skill | Purpose |
 | --- | --- |
+| [typescript-esm](plugins/typescript/skills/typescript-esm/SKILL.md) | Switch from CommonJS to ESM and fix errors. |
 | [typescript-project-setup](plugins/typescript/skills/typescript-project-setup/SKILL.md) | Create a new TypeScript project with a suitable configuration. |
 
-The skill provides instructions for installing TypeScript, configuring a new
-project, and setting up builds. Automatic invocation is not disabled.
+The project setup skill provides instructions for installing TypeScript,
+configuring a new project, and setting up builds. `typescript-esm` includes
+guidance on configuration, globals and interop, and module specifiers, along
+with scripts for rewriting relative specifiers and scanning for ESM leftovers.
 
 ## Installation
 
-The following commands install the plugin and its project setup skill.
+The following commands install the plugin and its two skills.
 
 ### Copilot CLI and Claude Code
 
@@ -45,7 +48,7 @@ For VS Code versions supporting agent plugins, enable plugin discovery in user s
 }
 ```
 
-Use `/plugins` in Copilot Chat to browse the marketplace and install `typescript`.
+Use `/plugins` in Copilot Chat to browse and install `typescript`.
 
 ### Codex CLI
 
@@ -79,7 +82,7 @@ linting. It does not execute or evaluate the skills in an agent host.
 See [CONTRIBUTING.md](CONTRIBUTING.md) for authoring and manual versioning,
 and [tests/README.md](tests/README.md) for the initial benchmark results.
 The results describe upstream experiments, not evaluations of the standalone
-skill distributed in this repository.
+skills distributed in this repository.
 There is no dashboard, scheduled agent evaluation, or automatic release process.
 
 ## License
