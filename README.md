@@ -6,16 +6,17 @@ Skills use the [Agent Skills](https://agentskills.io) format.
 
 ## What's included
 
-The `typescript` plugin currently includes two skills:
+The `typescript` plugin currently includes these skills:
 
 | Skill | Purpose |
 | --- | --- |
 | [typescript-project-setup](plugins/typescript/skills/typescript-project-setup/SKILL.md) | Create a new TypeScript project with a suitable configuration. |
+| [typescript-strict](plugins/typescript/skills/typescript-strict/SKILL.md) | Enable strict type checking and fix resulting errors without weakening types, tests, or runtime behavior. |
 | [typescript-update](plugins/typescript/skills/typescript-update/SKILL.md) | Upgrade TypeScript using version-specific migration guidance. |
 
 The skills provide instructions for installing TypeScript, configuring a new
-project, setting up builds, and upgrading existing projects. Automatic invocation
-is not disabled.
+project, setting up builds, enabling strict type checking, and upgrading existing
+projects. Automatic invocation is not disabled.
 
 ## Installation
 
@@ -82,7 +83,7 @@ Markdown linting. It does not execute or evaluate the skills in an agent host.
 See [CONTRIBUTING.md](CONTRIBUTING.md) for authoring and manual versioning,
 and [tests/README.md](tests/README.md) for the initial benchmark results.
 The results describe upstream experiments, not evaluations of the standalone
-skill distributed in this repository.
+skills distributed in this repository.
 There is no dashboard, scheduled agent evaluation, or automatic release process.
 
 ## License

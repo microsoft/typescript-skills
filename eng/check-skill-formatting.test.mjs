@@ -23,7 +23,7 @@ function changeFile(root, path, change) {
 }
 
 test("accepts shipped Markdown under representative consumer configurations", async () => {
-  assert.deepEqual(await checkSkillFormatting(repositoryRoot), { files: 5 });
+  assert.deepEqual(await checkSkillFormatting(repositoryRoot), { files: 6 });
 });
 
 test("rejects CRLF in shipped Markdown", async (t) => {

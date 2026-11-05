@@ -37,10 +37,11 @@ function changeSkill(root, change) {
   writeFileSync(path, change(readFileSync(path, "utf8")));
 }
 
-test("accepts the marketplace with the project setup and update skills", () => {
-  assert.deepEqual(checkRepository(repositoryRoot), { plugins: 1, skills: 2 });
+test("accepts the marketplace with the project setup, strict, and update skills", () => {
+  assert.deepEqual(checkRepository(repositoryRoot), { plugins: 1, skills: 3 });
   assert.deepEqual(readdirSync(join(repositoryRoot, "plugins/typescript/skills")).sort(), [
     "typescript-project-setup",
+    "typescript-strict",
     "typescript-update",
   ]);
 });
@@ -78,7 +79,8 @@ test("rejects unlisted plugins", (t) => {
 test("rejects plugin compatibility version drift", (t) => {
   const root = fixture(t);
   changeJson(root, "plugins/typescript/.codex-plugin/plugin.json", (value) => {
-    value.version = "0.2.0";
+    const [major, minor, patch] = value.version.split(".").map(Number);
+    value.version = `${major + 1}.${minor}.${patch}`;
   });
   assert.throws(() => checkRepository(root), /version differs from plugin.json/);
 });
@@ -141,7 +143,7 @@ test("rejects missing SKILL.md files", (t) => {
 
 test("accepts skills without repository-local benchmark fixtures or test plans", (t) => {
   const root = fixture(t);
-  assert.deepEqual(checkRepository(root), { plugins: 1, skills: 2 });
+  assert.deepEqual(checkRepository(root), { plugins: 1, skills: 3 });
 });
 
 test("rejects skill names that differ from their directories", (t) => {
@@ -174,7 +176,7 @@ test("accepts invocation control set to false", (t) => {
     "description: How to set up a new TypeScript project",
     'description: How to set up a new TypeScript project\ndisable-model-invocation: false',
   ));
-  assert.deepEqual(checkRepository(root), { plugins: 1, skills: 2 });
+  assert.deepEqual(checkRepository(root), { plugins: 1, skills: 3 });
 });
 
 test("rejects string-valued invocation flags", (t) => {
@@ -189,11 +191,11 @@ test("rejects string-valued invocation flags", (t) => {
 test("accepts CRLF skill frontmatter", (t) => {
   const root = fixture(t);
   changeSkill(root, (content) => content.replaceAll("\n", "\r\n"));
-  assert.deepEqual(checkRepository(root), { plugins: 1, skills: 2 });
+  assert.deepEqual(checkRepository(root), { plugins: 1, skills: 3 });
 });
 
 test("accepts skills with only the required frontmatter fields", (t) => {
   const root = fixture(t);
   changeSkill(root, (content) => content.replace("disable-model-invocation: true\n", ""));
-  assert.deepEqual(checkRepository(root), { plugins: 1, skills: 2 });
+  assert.deepEqual(checkRepository(root), { plugins: 1, skills: 3 });
 });
