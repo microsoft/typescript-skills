@@ -6,18 +6,20 @@ Skills use the [Agent Skills](https://agentskills.io) format.
 
 ## What's included
 
-The `typescript` plugin currently includes one skill:
+The `typescript` plugin currently includes two skills:
 
 | Skill | Purpose |
 | --- | --- |
 | [typescript-project-setup](plugins/typescript/skills/typescript-project-setup/SKILL.md) | Create a new TypeScript project with a suitable configuration. |
+| [typescript-update](plugins/typescript/skills/typescript-update/SKILL.md) | Upgrade TypeScript using version-specific migration guidance. |
 
-The skill provides instructions for installing TypeScript, configuring a new
-project, and setting up builds. Automatic invocation is not disabled.
+The skills provide instructions for installing TypeScript, configuring a new
+project, setting up builds, and upgrading existing projects. Automatic invocation
+is not disabled.
 
 ## Installation
 
-The following commands install the plugin and its project setup skill.
+The following commands install the plugin and its skills.
 
 ### Copilot CLI and Claude Code
 
@@ -73,8 +75,9 @@ npm ci
 npm run validate
 ```
 
-This runs structural plugin/skill checks, checker regression tests, and Markdown
-linting. It does not execute or evaluate the skills in an agent host.
+This runs structural plugin/skill checks, checker regression tests, skill
+formatting checks under representative consumer Prettier configurations, and
+Markdown linting. It does not execute or evaluate the skills in an agent host.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for authoring and manual versioning,
 and [tests/README.md](tests/README.md) for the initial benchmark results.
