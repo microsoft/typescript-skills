@@ -37,9 +37,10 @@ function changeSkill(root, change) {
   writeFileSync(path, change(readFileSync(path, "utf8")));
 }
 
-test("accepts the marketplace with the project setup skill", () => {
-  assert.deepEqual(checkRepository(repositoryRoot), { plugins: 1, skills: 1 });
+test("accepts the marketplace with the project setup and ESM skills", () => {
+  assert.deepEqual(checkRepository(repositoryRoot), { plugins: 1, skills: 2 });
   assert.deepEqual(readdirSync(join(repositoryRoot, "plugins/typescript/skills")).sort(), [
+    "typescript-esm",
     "typescript-project-setup",
   ]);
 });
@@ -140,7 +141,7 @@ test("rejects missing SKILL.md files", (t) => {
 
 test("accepts skills without repository-local benchmark fixtures or test plans", (t) => {
   const root = fixture(t);
-  assert.deepEqual(checkRepository(root), { plugins: 1, skills: 1 });
+  assert.deepEqual(checkRepository(root), { plugins: 1, skills: 2 });
 });
 
 test("rejects skill names that differ from their directories", (t) => {
@@ -173,7 +174,7 @@ test("accepts invocation control set to false", (t) => {
     "description: How to set up a new TypeScript project",
     'description: How to set up a new TypeScript project\ndisable-model-invocation: false',
   ));
-  assert.deepEqual(checkRepository(root), { plugins: 1, skills: 1 });
+  assert.deepEqual(checkRepository(root), { plugins: 1, skills: 2 });
 });
 
 test("rejects string-valued invocation flags", (t) => {
@@ -188,11 +189,11 @@ test("rejects string-valued invocation flags", (t) => {
 test("accepts CRLF skill frontmatter", (t) => {
   const root = fixture(t);
   changeSkill(root, (content) => content.replaceAll("\n", "\r\n"));
-  assert.deepEqual(checkRepository(root), { plugins: 1, skills: 1 });
+  assert.deepEqual(checkRepository(root), { plugins: 1, skills: 2 });
 });
 
 test("accepts skills with only the required frontmatter fields", (t) => {
   const root = fixture(t);
   changeSkill(root, (content) => content.replace("disable-model-invocation: true\n", ""));
-  assert.deepEqual(checkRepository(root), { plugins: 1, skills: 1 });
+  assert.deepEqual(checkRepository(root), { plugins: 1, skills: 2 });
 });
