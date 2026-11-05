@@ -3,6 +3,8 @@ name: typescript-strict
 description: Enable TypeScript strict mode (strict, noImplicitAny, strictNullChecks, etc.) in a project and fix the resulting errors without weakening types, tests, or runtime behavior. Use when asked to "enable strict mode", "turn on TypeScript strict", "fix strict errors", or migrate a codebase to strict type checking.
 ---
 
+<!-- prettier-ignore-start -->
+
 Your role is to turn on strict type checking and repair the code so the project is genuinely type-safe, without changing runtime behavior or weakening existing verification. Fixing the diagnostics matters; silencing them does not.
 
 ## 1. Establish a baseline first
@@ -43,7 +45,7 @@ Before supplying a local declaration, ambient module, or replacement for a depen
 
 ### Legitimate exceptions vs. escapes
 
-- `@ts-expect-error` in a dedicated negative type test that asserts something *should not* compile is a legitimate use. Keep such checks in test/type-test files, with a one-line reason, and report them as intentional rather than as strictness workarounds.
+- `@ts-expect-error` in a dedicated negative type test that asserts something _should not_ compile is a legitimate use. Keep such checks in test/type-test files, with a one-line reason, and report them as intentional rather than as strictness workarounds.
 - Pre-existing `any`/casts that already existed before your change are not new regressions, but do not copy them into new code, and prefer tightening them when you edit those lines anyway.
 - Report counts for both so a reviewer can tell intentional or pre-existing items from newly introduced escapes.
 
@@ -62,3 +64,5 @@ Before supplying a local declaration, ambient module, or replacement for a depen
 - Don't end with an unanswered question or pending work; make reasonable assumptions and state them.
 - Never describe remaining compiler errors as warnings or declare success while checks fail.
 - Final report must include a pass/fail/not-run ledger for: strict config coverage (list configs), compile, lint, tests, runtime, lockfile restore; plus remaining type errors, escape hatches used (including assertions and declaration shims, with reasons, matching the final patch), real bugs found, and any dependency/config changes. If you could not finish, say so plainly and describe the state.
+
+<!-- prettier-ignore-end -->
