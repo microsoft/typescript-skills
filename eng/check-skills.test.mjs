@@ -7,7 +7,7 @@ import test from "node:test";
 import { checkRepository } from "./check-skills.mjs";
 
 const repositoryRoot = fileURLToPath(new URL("../", import.meta.url));
-const skillPath = "plugins/typescript/skills/typescript-update/SKILL.md";
+const skillPath = "plugins/typescript/skills/typescript-project-setup/SKILL.md";
 
 function fixture(t) {
   const root = mkdtempSync(join(tmpdir(), "typescript-skills-check-"));
@@ -37,16 +37,11 @@ function changeSkill(root, change) {
   writeFileSync(path, change(readFileSync(path, "utf8")));
 }
 
-test("accepts the marketplace with exactly the seven requested skills", () => {
-  assert.deepEqual(checkRepository(repositoryRoot), { plugins: 1, skills: 7 });
+test("accepts the marketplace with the project setup and publish types skills", () => {
+  assert.deepEqual(checkRepository(repositoryRoot), { plugins: 1, skills: 2 });
   assert.deepEqual(readdirSync(join(repositoryRoot, "plugins/typescript/skills")).sort(), [
-    "typescript-build-project",
-    "typescript-build-references",
-    "typescript-esm",
     "typescript-project-setup",
     "typescript-publish-types",
-    "typescript-strict",
-    "typescript-update",
   ]);
 });
 
@@ -88,6 +83,48 @@ test("rejects plugin compatibility version drift", (t) => {
   assert.throws(() => checkRepository(root), /version differs from plugin.json/);
 });
 
+test("rejects missing or incorrect Agent Plugins schema identifiers", (t) => {
+  for (const schema of [undefined, "https://example.com/plugin.schema.json"]) {
+    const root = fixture(t);
+    changeJson(root, "plugins/typescript/plugin.json", (value) => {
+      if (schema === undefined) delete value.$schema;
+      else value.$schema = schema;
+    });
+    assert.throws(() => checkRepository(root), /invalid Agent Plugins manifest/);
+  }
+});
+
+test("rejects unsupported canonical manifest fields", (t) => {
+  for (const field of ["skills", "unsupported"]) {
+    const root = fixture(t);
+    changeJson(root, "plugins/typescript/plugin.json", (value) => {
+      value[field] = ["./skills/"];
+    });
+    assert.throws(() => checkRepository(root), /must NOT have additional properties/);
+  }
+});
+
+test("rejects invalid schema-defined optional metadata", (t) => {
+  const root = fixture(t);
+  changeJson(root, "plugins/typescript/plugin.json", (value) => {
+    value.author = { name: 123 };
+  });
+  assert.throws(() => checkRepository(root), /author\/name must be string/);
+});
+
+test("rejects compatibility manifests without the conventional skills path", (t) => {
+  for (const path of [".claude-plugin/plugin.json", ".codex-plugin/plugin.json"]) {
+    for (const skills of [undefined, ["./other-skills/"]]) {
+      const root = fixture(t);
+      changeJson(root, `plugins/typescript/${path}`, (value) => {
+        if (skills === undefined) delete value.skills;
+        else value.skills = skills;
+      });
+      assert.throws(() => checkRepository(root), /expected skills at \.\/skills\//);
+    }
+  }
+});
+
 test("rejects invalid versions", (t) => {
   const root = fixture(t);
   changeJson(root, "plugins/typescript/plugin.json", (value) => {
@@ -104,24 +141,24 @@ test("rejects missing SKILL.md files", (t) => {
 
 test("accepts skills without repository-local benchmark fixtures or test plans", (t) => {
   const root = fixture(t);
-  assert.deepEqual(checkRepository(root), { plugins: 1, skills: 7 });
+  assert.deepEqual(checkRepository(root), { plugins: 1, skills: 2 });
 });
 
 test("rejects skill names that differ from their directories", (t) => {
   const root = fixture(t);
-  changeSkill(root, (content) => content.replace("name: typescript-update", "name: different-name"));
+  changeSkill(root, (content) => content.replace("name: typescript-project-setup", "name: different-name"));
   assert.throws(() => checkRepository(root), /name must match its directory/);
 });
 
 test("rejects malformed YAML", (t) => {
   const root = fixture(t);
-  changeSkill(root, (content) => content.replace("name: typescript-update", "name: ["));
+  changeSkill(root, (content) => content.replace("name: typescript-project-setup", "name: ["));
   assert.throws(() => checkRepository(root), /invalid YAML/);
 });
 
 test("rejects duplicate YAML fields", (t) => {
   const root = fixture(t);
-  changeSkill(root, (content) => content.replace("name: typescript-update", "name: typescript-update\nname: duplicate"));
+  changeSkill(root, (content) => content.replace("name: typescript-project-setup", "name: typescript-project-setup\nname: duplicate"));
   assert.throws(() => checkRepository(root), /invalid YAML/);
 });
 
@@ -133,24 +170,30 @@ test("rejects empty descriptions", (t) => {
 
 test("accepts invocation control set to false", (t) => {
   const root = fixture(t);
-  changeSkill(root, (content) => content.replace("disable-model-invocation: true", "disable-model-invocation: false"));
-  assert.deepEqual(checkRepository(root), { plugins: 1, skills: 7 });
+  changeSkill(root, (content) => content.replace(
+    "description: How to set up a new TypeScript project",
+    'description: How to set up a new TypeScript project\ndisable-model-invocation: false',
+  ));
+  assert.deepEqual(checkRepository(root), { plugins: 1, skills: 2 });
 });
 
 test("rejects string-valued invocation flags", (t) => {
   const root = fixture(t);
-  changeSkill(root, (content) => content.replace("disable-model-invocation: true", 'disable-model-invocation: "true"'));
+  changeSkill(root, (content) => content.replace(
+    "description: How to set up a new TypeScript project",
+    'description: How to set up a new TypeScript project\ndisable-model-invocation: "true"',
+  ));
   assert.throws(() => checkRepository(root), /disable-model-invocation must be a boolean/);
 });
 
 test("accepts CRLF skill frontmatter", (t) => {
   const root = fixture(t);
   changeSkill(root, (content) => content.replaceAll("\n", "\r\n"));
-  assert.deepEqual(checkRepository(root), { plugins: 1, skills: 7 });
+  assert.deepEqual(checkRepository(root), { plugins: 1, skills: 2 });
 });
 
 test("accepts skills with only the required frontmatter fields", (t) => {
   const root = fixture(t);
   changeSkill(root, (content) => content.replace("disable-model-invocation: true\n", ""));
-  assert.deepEqual(checkRepository(root), { plugins: 1, skills: 7 });
+  assert.deepEqual(checkRepository(root), { plugins: 1, skills: 2 });
 });

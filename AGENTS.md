@@ -3,9 +3,9 @@
 This repository distributes skills under `plugins/<plugin>/skills/<skill>/`.
 Start with [CONTRIBUTING.md](CONTRIBUTING.md).
 
-- `typescript-publish-types` is implemented; the other six initial skills remain
-  stubs. Preserve those stubs' disabled automatic invocation and explicit
-  not-implemented behavior unless implementing and evaluating that skill.
+- `typescript-project-setup` and `typescript-publish-types` are implemented.
+  Leave automatic invocation disabled for unfinished skills and retain explicit
+  not-implemented behavior until implementing and evaluating them.
 - Keep plugin metadata synchronized across root, Claude, and Codex manifests,
   and keep all four marketplace manifests in sync.
 - Benchmark fixtures and evaluation tooling are maintained separately from the
