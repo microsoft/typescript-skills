@@ -3,9 +3,9 @@
 This repository distributes skills under `plugins/<plugin>/skills/<skill>/`.
 Start with [CONTRIBUTING.md](CONTRIBUTING.md).
 
-- `typescript-strict` is implemented; the other six initial skills remain stubs.
-  Preserve those stubs' disabled automatic invocation and explicit not-implemented
-  behavior unless implementing and evaluating that skill.
+- `typescript-project-setup` and `typescript-strict` are implemented. Keep
+  unfinished skills' automatic invocation disabled and their not-implemented
+  behavior explicit unless implementing and evaluating them.
 - Keep plugin metadata synchronized across root, Claude, and Codex manifests,
   and keep all four marketplace manifests in sync.
 - Benchmark fixtures and evaluation tooling are maintained separately from the

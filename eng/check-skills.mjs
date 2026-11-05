@@ -2,7 +2,12 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import Ajv2020 from "ajv/dist/2020.js";
 import { parse } from "yaml";
+import pluginSchema from "./plugin.schema.json" with { type: "json" };
+
+const ajv = new Ajv2020({ allErrors: true });
+const validatePlugin = ajv.compile(pluginSchema);
 
 const marketplacePaths = [
   ".github/plugin/marketplace.json",
@@ -99,6 +104,10 @@ export function checkRepository(root) {
     const pluginPath = `plugins/${plugin}`;
     const manifests = pluginManifestPaths.map((path) => readJson(root, `${pluginPath}/${path}`));
     const manifest = manifests[0];
+    assert(
+      validatePlugin(manifest),
+      `${pluginPath}/plugin.json: invalid Agent Plugins manifest: ${ajv.errorsText(validatePlugin.errors)}`,
+    );
     assert.equal(manifest.name, plugin, `${pluginPath}: manifest name must match its directory`);
     assert(
       typeof manifest.version === "string" && versionPattern.test(manifest.version),
@@ -110,10 +119,10 @@ export function checkRepository(root) {
       marketplaces[0].plugins.find((entry) => entry.name === plugin).description,
       `${pluginPath}: description must match its marketplace entry`,
     );
-    assert.deepEqual(manifest.skills, ["./skills/"], `${pluginPath}: expected skills at ./skills/`);
-
     for (let index = 1; index < manifests.length; index++) {
-      for (const field of ["name", "version", "description", "skills"]) {
+      const path = `${pluginPath}/${pluginManifestPaths[index]}`;
+      assert.deepEqual(manifests[index].skills, ["./skills/"], `${path}: expected skills at ./skills/`);
+      for (const field of ["name", "version", "description"]) {
         assert.deepEqual(
           manifests[index][field],
           manifest[field],
