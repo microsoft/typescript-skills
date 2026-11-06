@@ -9,27 +9,24 @@ Upgrade to the requested target (latest 7.x if unspecified), preserving effectiv
 
 ## How To Upgrade
 
-1. **Preflight and record the baseline (cheaply).**
-   - Reuse one manifest/config scan as an **ownership ledger**: directory/manifest/declaration section; requested CLI/API/emit role; baseline version/effective configs; target CLI and retained API owners; peers/overrides; lockfile; validation command. Include all workspace declarations and relevant standalone example/test roots. Separate intentional old-compiler consumer fixtures; do not blanket-upgrade them or exempt requested examples.
-   - Record current Node/package-manager versions, build/development minimum and published runtime minimum separately. Resolve and [probe the exact target launcher](6to7.md#upgrade-checklist) on the current host **before expensive baseline work or bulk edits**; metadata is not proof.
-   - Reuse `node_modules`, otherwise do **one** non-interactive baseline install without changing package-manager setup. Run owned build/typecheck/test/lint scripts once; log directory/config/compiler/host coverage and results. Bound long monorepo baselines to relevant gates; record timeouts/missing prerequisites.
-   - A red baseline is information, not a reason to abandon safe work. Separate host blockers from source diagnostics.
-2. **Read the version guides before your first edit.** Always read [6to7.md](6to7.md). Also read [5to6.md](5to6.md) if starting below 6.0, and [4to5.md](4to5.md) if starting below 5.0. Treat them as checklists of changes to apply up front, not as references to consult only after something breaks.
-3. **Choose each owner's package layout.** Run the [API-consumer check](6to7.md#does-the-project-need-the-typescript-api). Use the side-by-side CLI/API layout where needed; a simple app without API consumers keeps the direct plain-target path.
-4. **Apply config changes in one pass** by shared inheritance, including generated/test/example configs. Check TS6 defaults/removals (`types`, strictness, module/resolver, `baseUrl`/`paths`, interop, target, `rootDir`) even when jumping to 7. Preserve emitted paths and published `types`/exports, not just `--noEmit`. Update `@types/*` to compiler-compatible releases matching the supported runtime/dependency majors, and repair API tools rather than unrelated dependencies.
-5. **Install the target versions once**, then typecheck with the new `tsc` and fix the errors.
-   - Do not install/build every intermediate major. At most, run one optional check with the installed `tsc6` for more descriptive deprecation messages. Collect non-bailing workspace/config diagnostics once; build generated-declaration prerequisites before repairing downstream missing-type errors.
-6. **Run the [Completion Gate](#completion-gate)**, then **[Summarize](#summarize)**.
+1. **Inventory and preflight.** Reuse one manifest/config scan as a compact **ownership ledger**:
+   - Enumerate every requested declaration (manifest, section, CLI/API/emit role) and relevant workspace/standalone example/test config root. Group by shared config/install/tool graph; rows link to group-level baseline versions/configs, CLI/API owners, peers/overrides, generator policy, lockfile and gates. No prose dossier per directory.
+   - Private transitive compilers and intentional historical consumer fixtures stay unchanged unless they own or break a requested gate. There is **no global “zero TS5 in the lockfile” goal**; requested examples are not exempt.
+   - [Probe the exact launcher and declared build hosts](6to7.md#upgrade-checklist) before expensive baseline work or bulk edits.
+2. **Baseline once.** Reuse `node_modules`, otherwise do one frozen non-interactive baseline install. Run relevant owned build/typecheck/test/lint gates once with bounded time/output; record coverage (directory/config/compiler/host), failures and unverified prerequisites. Do not retry a broad red gate until its root cause or prerequisite changes.
+3. **Read guides before editing; prove one representative per group.** Always read [6to7.md](6to7.md); also [5to6.md](5to6.md) if starting below 6, [4to5.md](4to5.md) if below 5. Use the [API-consumer check](6to7.md#does-the-project-need-the-typescript-api) to choose plain or split layout and test the applicable integration boundaries. Simple current-runtime apps without API consumers take the direct plain-target path, without API checks.
+4. **Batch migration by shared inheritance**, including generated/test/example configs. Apply TS6 defaults/removals even when jumping to 7; preserve effective safety, emitted paths and published `types`/exports. Update `@types/*` within supported runtime/dependency majors; repair required API tools, not unrelated dependencies.
+5. **Propagate the proven layout and install**, then collect one non-bailing target diagnostic inventory. Use the repository task graph to build generated prerequisites before diagnosing downstream missing types. No intermediate-major installs/builds; at most one optional installed `tsc6` diagnostic check.
+6. **[Complete](#completion-gate) and [summarize](#summarize)**, including blockers rather than abandoning safe work.
 
 ## Long-Running and Interactive Commands
 
-- Log non-interactive installs/builds/tests, e.g. `CI=true yarn build > ts-upgrade-build.log 2>&1; echo "exit=$?"`; read the tail, then clean scratch logs. Target installs permit lockfile updates; baseline/completion installs are frozen/immutable.
-- If a command moves to the background, wait for its exit or explicitly stop it at the chosen budget and record it as unverified. **Do not end your turn while a command is still running**, and never end with an empty message.
-- Avoid input-waiting commands (`pnpm patch` without `--edit-dir`, `npx` without `-y`, generators, interactive git). If prompted, finish or cancel that workflow in the same turn.
-- Prefer upgrading a dependency over patching it. If a dependency must be patched, persist the patch non-interactively and refresh the lockfile:
-  - **pnpm:** `pnpm patch <pkg>@<exact-version> --edit-dir patch-work/<pkg>`, edit there, `pnpm patch-commit patch-work/<pkg>` (writes `patches/`, `patchedDependencies` and lockfile), remove the scratch directory, then `pnpm install --frozen-lockfile`.
-  - **yarn (berry):** `yarn patch <pkg>@npm:<exact-version>` prints a folder; edit it, run `yarn patch-commit -s <folder>`, then `yarn install`.
-  - **npm:** edit `node_modules/<pkg>`, run `npx -y patch-package <pkg>`, and add a `"postinstall": "patch-package"` script.
+- Log commands with exit status; read bounded error inventories, not repeated full logs. Clean scratch files. Target installs allow lock updates; baseline/completion installs are frozen.
+- Wait for commands or stop them at the budget and record unverified; never end with running commands or an empty message. Finish/cancel prompts; use non-interactive flags.
+- Prefer compatible dependency upgrades. Persist necessary patches and refresh the lockfile:
+  - **pnpm:** `pnpm patch <pkg>@<exact-version> --edit-dir patch-work/<pkg>`, edit, `pnpm patch-commit patch-work/<pkg>`, remove scratch.
+  - **yarn (berry):** `yarn patch <pkg>@npm:<exact-version>`, edit the printed folder, `yarn patch-commit -s <folder>`, then `yarn install`. Inspect changed descriptors: patch-save must not replace `typescript` API aliases with the CLI/implementation package.
+  - **npm:** edit `node_modules/<pkg>`, run `npx -y patch-package <pkg>`; persist its install hook/tool without breaking published-package installs.
 
 ## Forbidden Fixes
 
@@ -45,22 +42,15 @@ DOM/type updates may expose usercode bugs. Fix clear intent and verify runtime b
 
 ## Completion Gate
 
-The upgrade is not done until this gate has been run after your last edit:
+Batch repairs, then run one integrated gate set. Late edits invalidate only affected evidence:
 
-1. Do a clean, lockfile-respecting install (e.g. `npm ci`, `pnpm install --frozen-lockfile`, `yarn install --immutable`). This proves `package.json`, the lockfile and any `patchedDependencies` agree.
-2. Reconcile **every ledger row**: declarations/peers must satisfy the target or a verified CLI/API migration. Probe installed compiler version and tool API resolution from each owner directory, without auto-downloading missing compilers. A green root or TS7 alias beside unrelated retained TS5 is insufficient.
-3. Rerun baseline gates with matching directory/config/entrypoint/host coverage, including standalone roots. Check all ordinary compiler entrypoints, API tools and emitted `types`/exports. Shared gates can cover multiple rows; no full build per example is required.
-4. Audit the final diff for new `any`/double casts, suppressions, disabled checks and output-format changes against effective baseline semantics.
-5. Fix regressions or report an incomplete upgrade. Unchanged requested declarations, target errors (including generated/example configs) and unverified gates prevent completion. Downloaded newer Node checks are **not original-host passes**; a permitted host migration must persist setup/CI changes and be reported separately without dropping published runtime support.
+1. Manifest/lock/patch/install-hook changes require a clean frozen install per affected install root, renewed resolution/integration checks and affected consumer gates. Reuse the representative boundary tests.
+2. Reconcile **every ledger row**, including peers and standalone roots, against the requested target or verified CLI/API roles. Batch installed version/resolution probes from owner directories in one pass; never auto-download missing compilers. Root green does not certify local peers.
+3. Run grouped baseline gates with matching config/entrypoint/host coverage, API tools and emitted `types`/exports. No full build per owner. Source/config changes invalidate affected compile/build/test consumers; docs-only edits need no install/runtime rerun. Keep unaffected evidence.
+4. Audit the diff for new casts/suppressions/disabled checks and output changes against effective baseline semantics. Fix regressions; unchanged requested declarations, new target errors and unverified gates mean **incomplete**.
 
 ## Summarize
 
-Your final message must always be this summary, even if you were blocked or stopped early:
-
-- Starting/installed versions and CLI/API/emit ownership by ledger group, including unchanged requested declarations and intentional compatibility fixtures
-- Target installed, ordinary CLI usable and API-tool gates usable: report each separately
-- Baseline vs. final build/typecheck/test/lint results with coverage and Node version; separate current-host and upgraded-host results and any durable support change
-- Notable edits, usercode bugs, every red/unverified gate and why
-- Complete or incomplete upgrade, with concrete remaining blockers; no deferred-cleanup offer or question in unattended runs
+Always report starting/installed versions and CLI/API/emit roles by group, unchanged declarations/fixtures, and notable edits. Separate target installed, ordinary CLI usable and API-tool gates usable. Compare baseline/final gates with coverage and Node hosts; newer-Node passes are **not original-host passes**. List red/unverified gates and concrete blockers, then complete/incomplete; no cleanup offer or unattended question.
 
 <!-- prettier-ignore-end -->
