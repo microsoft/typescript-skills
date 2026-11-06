@@ -11,12 +11,18 @@ The `typescript` plugin currently includes these skills:
 | Skill | Purpose |
 | --- | --- |
 | [typescript-project-setup](plugins/typescript/skills/typescript-project-setup/SKILL.md) | Create a new TypeScript project with a suitable configuration. |
+| [typescript-build-references](plugins/typescript/skills/typescript-build-references/SKILL.md) | Add project references, incremental builds, and declaration emission without breaking existing builds or public APIs. |
 | [typescript-strict](plugins/typescript/skills/typescript-strict/SKILL.md) | Enable strict type checking and fix resulting errors without weakening types, tests, or runtime behavior. |
 | [typescript-update](plugins/typescript/skills/typescript-update/SKILL.md) | Upgrade TypeScript using version-specific migration guidance. |
 
-The skills provide instructions for installing TypeScript, configuring a new
-project, setting up builds, enabling strict type checking, and upgrading existing
-projects. Automatic invocation is not disabled.
+`typescript-build-references` has no bundled scripts. In workspace monorepos it
+checks references with
+[`workspaces-to-typescript-project-references --check`](https://github.com/azu/monorepo-utils/tree/master/packages/@monorepo-utils/workspaces-to-typescript-project-references),
+run through `npx`, and it adds `isolatedDeclarations` annotations by hand.
+
+The skills provide instructions for configuring projects, managing build
+references, enabling strict type checking, and upgrading TypeScript. Automatic
+invocation is not disabled.
 
 ## Installation
 
