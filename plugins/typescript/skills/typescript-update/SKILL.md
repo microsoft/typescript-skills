@@ -5,95 +5,62 @@ description: Guidance for updating to the newer versions of TypeScript. Use this
 
 <!-- prettier-ignore-start -->
 
-Your role is to upgrade the project to the latest TypeScript version (7.x, or a later minor such as 7.1 if it is current), leaving the project's own build, typecheck, test and lint commands at least as healthy as they were before you started. You must always finish with the summary described in [Summarize](#summarize), even if you are blocked.
+Upgrade to the requested target (latest 7.x if unspecified), preserving effective baseline safety, runtime/output semantics and persisted installation. This governs **every guide**: no lower-target or suppression escape hatch. In unattended runs, finish safe work and [summarize](#summarize) unresolved blockers as incomplete, without questions.
 
 ## How To Upgrade
 
-1. **Record the baseline (cheaply).**
-   - Read every `package.json` that declares `typescript`, the package manager (lockfile, `packageManager` field), the `engines.node` range, and `node --version`.
-   - Identify the project's own `build`, `typecheck`/`check-types`, `test` and `lint` scripts.
-   - Reuse an existing `node_modules` if present. Otherwise do **one** non-interactive install (see [Long-Running and Interactive Commands](#long-running-and-interactive-commands)). Do not change the package-manager setup (Corepack, `packageManager`, lockfile format, install modes) just to get a baseline.
-   - Run each of those scripts once, logging output, and note which pass and which fail.
-   - A red or uninstallable baseline is **information to report, never a reason not to upgrade**. Continue with the upgrade and compare against the baseline at the end.
+1. **Preflight and record the baseline (cheaply).**
+   - Reuse one manifest/config scan as an **ownership ledger**: directory/manifest/declaration section; requested CLI/API/emit role; baseline version/effective configs; target CLI and retained API owners; peers/overrides; lockfile; validation command. Include all workspace declarations and relevant standalone example/test roots. Separate intentional old-compiler consumer fixtures; do not blanket-upgrade them or exempt requested examples.
+   - Record current Node/package-manager versions, build/development minimum and published runtime minimum separately. Resolve and [probe the exact target launcher](6to7.md#upgrade-checklist) on the current host **before expensive baseline work or bulk edits**; metadata is not proof.
+   - Reuse `node_modules`, otherwise do **one** non-interactive baseline install without changing package-manager setup. Run owned build/typecheck/test/lint scripts once; log directory/config/compiler/host coverage and results. Bound long monorepo baselines to relevant gates; record timeouts/missing prerequisites.
+   - A red baseline is information, not a reason to abandon safe work. Separate host blockers from source diagnostics.
 2. **Read the version guides before your first edit.** Always read [6to7.md](6to7.md). Also read [5to6.md](5to6.md) if starting below 6.0, and [4to5.md](4to5.md) if starting below 5.0. Treat them as checklists of changes to apply up front, not as references to consult only after something breaks.
-3. **Choose the package layout.** Run the API-consumer check in [6to7.md](6to7.md#does-the-project-need-the-typescript-api). If anything in the project or its dependencies uses the TypeScript API, use the side-by-side layout (`typescript` aliased to `@typescript/typescript6`, `@typescript/native` aliased to `typescript@7`) from the start. Otherwise install plain `typescript@7`.
-4. **Apply all config changes in one pass.** Edit `tsconfig*.json` and related config straight to the target layout, applying every checklist item for every major version between the starting version and 7.0 (e.g. `types`, `module`/`moduleResolution`, `baseUrl`/`paths`, `rootDir`, `esModuleInterop`, removed options). Update `@types/*` and TypeScript-dependent tools (see [`@types` Dependencies](#types-dependencies)).
+3. **Choose each owner's package layout.** Run the [API-consumer check](6to7.md#does-the-project-need-the-typescript-api). Use the side-by-side CLI/API layout where needed; a simple app without API consumers keeps the direct plain-target path.
+4. **Apply config changes in one pass** by shared inheritance, including generated/test/example configs. Check TS6 defaults/removals (`types`, strictness, module/resolver, `baseUrl`/`paths`, interop, target, `rootDir`) even when jumping to 7. Preserve emitted paths and published `types`/exports, not just `--noEmit`. Update `@types/*` to compiler-compatible releases matching the supported runtime/dependency majors, and repair API tools rather than unrelated dependencies.
 5. **Install the target versions once**, then typecheck with the new `tsc` and fix the errors.
-   - Do not install and build every intermediate major version. At most, you may run one optional typecheck with TypeScript 6.0 (e.g. `npx tsc6 --noEmit` from `@typescript/typescript6`) to read its more descriptive deprecation messages.
+   - Do not install/build every intermediate major. At most, run one optional check with the installed `tsc6` for more descriptive deprecation messages. Collect non-bailing workspace/config diagnostics once; build generated-declaration prerequisites before repairing downstream missing-type errors.
 6. **Run the [Completion Gate](#completion-gate)**, then **[Summarize](#summarize)**.
 
 ## Long-Running and Interactive Commands
 
-Installs and builds in large repositories can take several minutes. Agent terminals may move a command to the background after a timeout; the command is still running.
-
-- Run installs, builds and tests non-interactively, with output redirected to a log file, e.g. `CI=true yarn build > /tmp/ts-upgrade-build.log 2>&1; echo "exit=$?"`. Then read the tail of the log.
-- If the terminal tool reports that a command was moved to the background or timed out, keep polling its output (or the log file) until it exits. **Do not end your turn while a command is still running**, and never end a turn with an empty message.
-- Never run commands that wait for input (e.g. `pnpm patch` without `--edit-dir`, `npx` without `-y`, `npm init`, project generators, `git rebase -i`). If a prompt appears anyway, answer it immediately and finish the workflow it started in the same turn.
+- Log non-interactive installs/builds/tests, e.g. `CI=true yarn build > ts-upgrade-build.log 2>&1; echo "exit=$?"`; read the tail, then clean scratch logs. Target installs permit lockfile updates; baseline/completion installs are frozen/immutable.
+- If a command moves to the background, wait for its exit or explicitly stop it at the chosen budget and record it as unverified. **Do not end your turn while a command is still running**, and never end with an empty message.
+- Avoid input-waiting commands (`pnpm patch` without `--edit-dir`, `npx` without `-y`, generators, interactive git). If prompted, finish or cancel that workflow in the same turn.
 - Prefer upgrading a dependency over patching it. If a dependency must be patched, persist the patch non-interactively and refresh the lockfile:
-  - **pnpm:** `pnpm patch <pkg>@<exact-version> --edit-dir /tmp/patch-<pkg>`, edit the files there, `pnpm patch-commit /tmp/patch-<pkg>` (writes `patches/` and `patchedDependencies` and updates the lockfile), then verify with `pnpm install --frozen-lockfile`.
+  - **pnpm:** `pnpm patch <pkg>@<exact-version> --edit-dir patch-work/<pkg>`, edit there, `pnpm patch-commit patch-work/<pkg>` (writes `patches/`, `patchedDependencies` and lockfile), remove the scratch directory, then `pnpm install --frozen-lockfile`.
   - **yarn (berry):** `yarn patch <pkg>@npm:<exact-version>` prints a folder; edit it, run `yarn patch-commit -s <folder>`, then `yarn install`.
   - **npm:** edit `node_modules/<pkg>`, run `npx -y patch-package <pkg>`, and add a `"postinstall": "patch-package"` script.
 
 ## Forbidden Fixes
 
-Do not paper over upgrade errors with suppression escape hatches. Specifically:
-
 - Do not use `ignoreDeprecations`. The target version will not support this option.
 - Do not add `// @ts-ignore`, `// @ts-expect-error`, or `// @ts-nocheck` to silence new errors.
-- Do not use `any` just to make an error go away.
-- Do not disable `tsconfig.json` strictness flags (`strict`, `noImplicitAny`, `strictNullChecks`, `skipLibCheck`, etc.)
-
-## Version-Specific Guidance
-
-Additional files document version-specific changes and migration steps. Read the ones that apply before editing (see step 2 above):
-
-- [4to5.md](4to5.md) covers upgrading from 4.x to 5.0.
-- [5to6.md](5to6.md) covers upgrading from 5.x to 6.0.
-- [6to7.md](6to7.md) covers upgrading from 6.x to 7.0, including the TypeScript API compatibility layout and troubleshooting for tool-injected `baseUrl`, the Node.js version required by the 7.0 `tsc` launcher, and framework-generated tsconfigs.
-
-## Common Issues
-
-All versions of TypeScript may include updates to the DOM. These are not specifically documented anywhere. Use your best judgment to determine how to fix these, keeping in mind that you should not be making runtime-affecting changes unless absolutely justified.
+- Do not introduce `any`, double casts or disabled checks just to hide errors.
+- Do not weaken **effective baseline** strictness (`strict`, `noImplicitAny`, `strictNullChecks`, etc.). Explicitly preserving an old implicit default such as `strict: false` is allowed.
+- Never turn `skipLibCheck` **on** to bypass new declaration diagnostics; repair compatible dependency versions/declarations instead. Existing negative type-test directives and precise asset declarations are not new suppressions.
 
 ## Usercode Bugs
 
-Newer versions TypeScript may sometimes find _unambiguous problems_ in the user's code that were not caught by previous versions.
-Sometimes you will be able to easily determine the correct fix (i.e. what was intended).
-If you can't determine the correct fix, add a temporary `ts-ignore` comment to suppress the error so you can continue with the upgrade process:
-
-```ts
-// @ts-ignore BUG: This is always a runtime error! Fix as appropriate depending on intended meaning
-const p = "foo" in 42;
-```
-
-When you're done, remove the `@ts-ignore` part of the comment, but leave behind the explanation of why the code is wrong.
-Report all bugs you found in the summary.
-
-## `@types` Dependencies
-
-You may need to update `@types` dependencies alongside the main TypeScript version.
-Check the `package.json` for any `@types/` entries and update them to the latest version compatible with the corresponding core dependency.
+DOM/type updates may expose usercode bugs. Fix clear intent and verify runtime behavior; otherwise leave diagnostics visible, continue independent safe work and report the blocker. Do not temporarily suppress errors or invent behavior.
 
 ## Completion Gate
 
 The upgrade is not done until this gate has been run after your last edit:
 
 1. Do a clean, lockfile-respecting install (e.g. `npm ci`, `pnpm install --frozen-lockfile`, `yarn install --immutable`). This proves `package.json`, the lockfile and any `patchedDependencies` agree.
-2. Confirm the installed compiler version, e.g. `npx tsc --version`.
-3. Rerun each baseline command (build, typecheck, test, lint), including tests, and compare each one against the baseline.
-4. Every command that passed in the baseline and fails now must be fixed, or reported in the summary as an explicit failure of the upgrade. Do not label it "out of scope". The upgrade is also not complete while the target `tsc` reports errors for the project, including errors from framework-generated tsconfigs.
+2. Reconcile **every ledger row**: declarations/peers must satisfy the target or a verified CLI/API migration. Probe installed compiler version and tool API resolution from each owner directory, without auto-downloading missing compilers. A green root or TS7 alias beside unrelated retained TS5 is insufficient.
+3. Rerun baseline gates with matching directory/config/entrypoint/host coverage, including standalone roots. Check all ordinary compiler entrypoints, API tools and emitted `types`/exports. Shared gates can cover multiple rows; no full build per example is required.
+4. Audit the final diff for new `any`/double casts, suppressions, disabled checks and output-format changes against effective baseline semantics.
+5. Fix regressions or report an incomplete upgrade. Unchanged requested declarations, target errors (including generated/example configs) and unverified gates prevent completion. Downloaded newer Node checks are **not original-host passes**; a permitted host migration must persist setup/CI changes and be reported separately without dropping published runtime support.
 
 ## Summarize
 
 Your final message must always be this summary, even if you were blocked or stopped early:
 
-- Starting TypeScript version
-- Ending TypeScript version actually installed (from `tsc --version` or the lockfile), and the package layout used (plain `typescript@7` or side-by-side with `@typescript/typescript6`)
-- Baseline vs. final result for each build, typecheck, test and lint command
-- Any notable edits you had to make
-- Bugs in usercode you found
-  - Offer to remove the `// @ts-ignore` comments you added
-- Every gate that is still red, and why
-- If you had to stop before reaching the latest version, explain what happened and what remains to be done
+- Starting/installed versions and CLI/API/emit ownership by ledger group, including unchanged requested declarations and intentional compatibility fixtures
+- Target installed, ordinary CLI usable and API-tool gates usable: report each separately
+- Baseline vs. final build/typecheck/test/lint results with coverage and Node version; separate current-host and upgraded-host results and any durable support change
+- Notable edits, usercode bugs, every red/unverified gate and why
+- Complete or incomplete upgrade, with concrete remaining blockers; no deferred-cleanup offer or question in unattended runs
 
 <!-- prettier-ignore-end -->
