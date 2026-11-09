@@ -1,3 +1,5 @@
+<!-- prettier-ignore-start -->
+
 # Packed-consumer check
 
 A fallback for when `attw` and `publint` are unavailable or crash, and a second opinion when
@@ -31,8 +33,8 @@ Does not prove:
 
 Two things decide which modes an entry is probed in, and neither is a general Node resolver. The
 script reads the export value only to answer "does this entry publish this mode", following Node's
-rule that conditions are tried in order, the first match decides, and a `null` target means *not
-exported* rather than *try the next key*. It does not implement path mapping, nested fallback
+rule that conditions are tried in order, the first match decides, and a `null` target means _not
+exported_ rather than _try the next key_. It does not implement path mapping, nested fallback
 arrays in full, or condition sets beyond `node`/`import`/`require`/`default`. The `ok`/`FAIL`
 rows themselves come from `tsc`'s own resolution, which is the thing consumers experience.
 
@@ -40,7 +42,7 @@ An `exports` key set to `null` is the package excluding that path — including 
 `null` wildcard. It is never a public entry, and naming it as an argument does not make it one:
 the script says it is excluded and skips it.
 
-Two exit codes mean *nothing was checked*, and must not be read as a pass: `2` when the resolvable
+Two exit codes mean _nothing was checked_, and must not be read as a pass: `2` when the resolvable
 TypeScript exposes no compiler API (TypeScript 7's native package is version metadata only — use
 `attw` and rerun where a TypeScript 5 is resolvable), and `3` when no entry was derivable and none
 was supplied.
@@ -269,7 +271,7 @@ probes compiled
 ```
 
 That table is the per-entry-point evidence to quote in your summary; quote the `note` lines too,
-since they say what was *not* checked. Three shapes matter:
+since they say what was _not_ checked. Three shapes matter:
 
 - `FAIL  my-pkg/raw (esm) -> .../dist/browser.mjs` — the subpath has no `types` condition, so the
   consumer gets a `.js` and an implicit `any`. Go back to step 3.
@@ -317,3 +319,5 @@ FAIL  legacy-pkg/lib/util/helper (cjs) -> node_modules/legacy-pkg/lib/util/helpe
 Do not report "the fallback passed" on its own. Report the table, the `note` lines, the compile
 result, and the fact that this is a fallback: it does not replace an `attw` run that you could not
 complete.
+
+<!-- prettier-ignore-end -->

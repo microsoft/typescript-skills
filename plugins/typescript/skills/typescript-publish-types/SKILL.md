@@ -3,6 +3,8 @@ name: typescript-publish-types
 description: How to publish TypeScript declarations from an npm package so consumers actually resolve them. Use this when asked to add types/typings to a package, ship .d.ts files, fix "Could not find a declaration file for module", or make a package's published types resolve correctly.
 ---
 
+<!-- prettier-ignore-start -->
+
 Your role is to make every public entry point of a package resolve to a declaration file **from the
 packed tarball**, without breaking the existing build.
 
@@ -109,14 +111,14 @@ Find how the package builds, then enable declaration output **there**. Adding `"
 `package.json` without emitting a `.d.ts` produces a package that is worse than untyped — it points
 at a file that does not exist.
 
-| Build system | How to emit declarations |
-|---|---|
-| `tsc` | `"declaration": true` in the tsconfig that produces the shipped output (watch `noEmit`, and project references/`composite`) |
-| `tsup` | `dts: true` in `tsup.config.ts` |
-| `vite` | `vite-plugin-dts` |
-| `rollup` | `rollup-plugin-dts`, as a second bundle whose input is the entry `.ts` |
-| `esbuild` | esbuild does not emit declarations — run `tsc --emitDeclarationOnly` alongside it |
-| `api-extractor` | `@microsoft/api-extractor` to roll many `.d.ts` into one |
+| Build system    | How to emit declarations                                                                                                    |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `tsc`           | `"declaration": true` in the tsconfig that produces the shipped output (watch `noEmit`, and project references/`composite`) |
+| `tsup`          | `dts: true` in `tsup.config.ts`                                                                                             |
+| `vite`          | `vite-plugin-dts`                                                                                                           |
+| `rollup`        | `rollup-plugin-dts`, as a second bundle whose input is the entry `.ts`                                                      |
+| `esbuild`       | esbuild does not emit declarations — run `tsc --emitDeclarationOnly` alongside it                                           |
+| `api-extractor` | `@microsoft/api-extractor` to roll many `.d.ts` into one                                                                    |
 
 Rules that cost whole runs when ignored:
 
@@ -133,6 +135,7 @@ Rules that cost whole runs when ignored:
   ```
 
   Then make all the dependency changes at once, through the package manager, in one install.
+
 - **`tsc` does not copy hand-written `.d.ts` inputs to the output directory.** If your source tree
   contains declarations or module augmentations that the public API references, copy them into the
   output or bundle them in. Do not weaken the types to make the reference disappear.
@@ -158,19 +161,32 @@ branch, immediately before that branch's `default`** — not once at the top of 
   "name": "my-pkg",
   "type": "module",
   "main": "./dist/index.cjs",
-  "types": "./dist/index.d.cts",             // Node10 fallback only; see below
+  "types": "./dist/index.d.cts", // Node10 fallback only; see below
   "exports": {
     ".": {
-      "import": { "types": "./dist/index.d.mts", "default": "./dist/index.mjs" },
-      "require": { "types": "./dist/index.d.cts", "default": "./dist/index.cjs" }
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs",
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs",
+      },
     },
-    "./browser": {                           // subpaths need the same shape
-      "import": { "types": "./dist/browser.d.mts", "default": "./dist/browser.mjs" },
-      "require": { "types": "./dist/browser.d.cts", "default": "./dist/browser.cjs" }
+    "./browser": {
+      // subpaths need the same shape
+      "import": {
+        "types": "./dist/browser.d.mts",
+        "default": "./dist/browser.mjs",
+      },
+      "require": {
+        "types": "./dist/browser.d.cts",
+        "default": "./dist/browser.cjs",
+      },
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
   },
-  "typesVersions": { "*": { "browser": ["./dist/browser.d.cts"] } }
+  "typesVersions": { "*": { "browser": ["./dist/browser.d.cts"] } },
 }
 ```
 
@@ -255,7 +271,7 @@ npx --yes @arethetypeswrong/cli --format table <tarball>
 declaration, and ESM declarations masquerading as CJS. It reports **per entry point**, which is
 exactly the blind spot in step 1. If you run only one verification tool, run this one.
 
-**An `attw` failure in a mode the package supports is a failure.** Finding *a* declaration file is
+**An `attw` failure in a mode the package supports is a failure.** Finding _a_ declaration file is
 not the same as that file having the right module semantics: a successful path-only probe does not
 overrule `export =` missing from a CJS entry, or an ESM declaration served to `require`. Fix it, or
 report it as an unresolved failure in your summary. Never drop it silently.
@@ -264,12 +280,12 @@ report it as an unresolved failure in your summary. Never drop it silently.
 
 Sort the output into four kinds before reacting:
 
-| Symptom | What it means | What to do |
-|---|---|---|
-| Errors naming your entry points, conditions, or files | Real package diagnostics | Fix the package |
-| An internal stack trace, e.g. `Cannot read properties of undefined (reading 'filename')` | The checker crashed | Retry **once** with a genuinely different input (explicit tarball instead of `--pack`), then use the [packed-consumer check](consumer-check.md) |
-| `publint` and `npm pack` disagree about what is published | The checker inspected a different artifact or pack manager | Inspect the real archive from the repo's own manager (`yarn pack`, `pnpm pack`) and compare. Do not add metadata to make the message go away |
-| A `publint` "suggestion", or a warning about a mode the package does not support | Optional | Leave it. Do not add `"type": "commonjs"`, change `default`, or restructure exports to silence advice — the warning usually survives and the change breaks something real |
+| Symptom                                                                                  | What it means                                              | What to do                                                                                                                                                                |
+| ---------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Errors naming your entry points, conditions, or files                                    | Real package diagnostics                                   | Fix the package                                                                                                                                                           |
+| An internal stack trace, e.g. `Cannot read properties of undefined (reading 'filename')` | The checker crashed                                        | Retry **once** with a genuinely different input (explicit tarball instead of `--pack`), then use the [packed-consumer check](consumer-check.md)                           |
+| `publint` and `npm pack` disagree about what is published                                | The checker inspected a different artifact or pack manager | Inspect the real archive from the repo's own manager (`yarn pack`, `pnpm pack`) and compare. Do not add metadata to make the message go away                              |
+| A `publint` "suggestion", or a warning about a mode the package does not support         | Optional                                                   | Leave it. Do not add `"type": "commonjs"`, change `default`, or restructure exports to silence advice — the warning usually survives and the change breaks something real |
 
 Cycling through `attw` option permutations after the same internal error is not a discriminating
 retry. One new hypothesis per attempt; when you run out, switch to the packed-consumer check.
@@ -298,7 +314,7 @@ subpaths, and it will otherwise probe only the root and pass while the deep path
 
 Do **not** call `ts.resolveModuleName(spec, '/tmp/consumer.ts', ...)` from the repo. Nothing installs
 the package into `/tmp`, so it reports `UNRESOLVED` for a perfectly good package, and a resolution
-lookup alone cannot see a broken import *inside* a declaration.
+lookup alone cannot see a broken import _inside_ a declaration.
 
 If the repo has a type test (`test/typescript`, `*.test-d.ts`, `tsd`, a `test:typescript` script),
 run it too.
@@ -312,10 +328,10 @@ regressions, and they are easy to miss because the types goal appears met.
 
 Run the checks your change can invalidate, once each:
 
-| What you changed | What that invalidates |
-|---|---|
-| Source, build config, or tsconfig | build, pack, consumer checks, tests |
-| `package.json` routes or `typesVersions` only | routing/resolution and pack checks — not the runtime suites, not the install |
+| What you changed                                        | What that invalidates                                                                                                                        |
+| ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Source, build config, or tsconfig                       | build, pack, consumer checks, tests                                                                                                          |
+| `package.json` routes or `typesVersions` only           | routing/resolution and pack checks — not the runtime suites, not the install                                                                 |
 | Dependencies, the lockfile, or install-affecting config | the clean/frozen install, build and tests, **and** pack plus consumer checks, since a dependency change can change the declarations you emit |
 
 A successful check stays valid until something it depends on changes. Re-running an unchanged
@@ -323,12 +339,12 @@ runtime suite after a metadata-only edit buys nothing. Equally, do not let lifec
 work twice: if `pretest` compiles, `npm run build && npm test` compiles twice and throws the first
 build away. Read the scripts from the preflight and chain accordingly.
 
-Before you report success, each of these guarantees must hold, backed by evidence produced *after*
+Before you report success, each of these guarantees must hold, backed by evidence produced _after_
 the last change that invalidated it:
 
 - **A clean, frozen install** — `npm ci` / `pnpm install --frozen-lockfile` / `yarn --immutable` —
   proving the manifest and lockfile you are shipping install from scratch. It must postdate your
-  final dependency or lockfile edit. A clean install done *before* that edit proves nothing about
+  final dependency or lockfile edit. A clean install done _before_ that edit proves nothing about
   what you are shipping; redo it, or say plainly that it predates the change. If you changed no
   dependencies at all, an earlier clean install still counts — name it.
 - **Build and test evidence for the current sources and config.** If your last edit was
@@ -407,3 +423,5 @@ Then, in the same summary and without softening:
 - Any failure you call pre-existing, with the baseline comparison that establishes it.
 - The output of a repo-wide `git status`, so stray tarballs, caches, or edits in other packages are
   visible rather than shipped.
+
+<!-- prettier-ignore-end -->
