@@ -6,19 +6,28 @@ Skills use the [Agent Skills](https://agentskills.io) format.
 
 ## What's included
 
-The `typescript` plugin currently includes two skills:
+The `typescript` plugin currently includes these skills:
 
 | Skill | Purpose |
 | --- | --- |
 | [typescript-project-setup](plugins/typescript/skills/typescript-project-setup/SKILL.md) | Create a new TypeScript project with a suitable configuration. |
 | [typescript-publish-types](plugins/typescript/skills/typescript-publish-types/SKILL.md) | Publish TypeScript declarations that consumers can resolve from the packed package. |
+| [typescript-build-references](plugins/typescript/skills/typescript-build-references/SKILL.md) | Add project references, incremental builds, and declaration emission without breaking existing builds or public APIs. |
+| [typescript-strict](plugins/typescript/skills/typescript-strict/SKILL.md) | Enable strict type checking and fix resulting errors without weakening types, tests, or runtime behavior. |
+| [typescript-update](plugins/typescript/skills/typescript-update/SKILL.md) | Upgrade TypeScript using version-specific migration guidance. |
 
-The skills provide instructions for setting up new TypeScript projects and
-shipping declarations with consumer verification. Automatic invocation is not disabled.
+`typescript-build-references` has no bundled scripts. In workspace monorepos it
+checks references with
+[`workspaces-to-typescript-project-references --check`](https://github.com/azu/monorepo-utils/tree/master/packages/@monorepo-utils/workspaces-to-typescript-project-references),
+run through `npx`, and it adds `isolatedDeclarations` annotations by hand.
+
+The skills provide instructions for configuring projects, managing build
+references, publishing declarations with consumer verification, enabling strict type checking, and upgrading TypeScript. Automatic
+invocation is not disabled.
 
 ## Installation
 
-The following commands install the plugin and both skills.
+The following commands install the plugin and its skills.
 
 ### Copilot CLI and Claude Code
 
@@ -74,8 +83,9 @@ npm ci
 npm run validate
 ```
 
-This runs structural plugin/skill checks, checker regression tests, and Markdown
-linting. It does not execute or evaluate the skills in an agent host.
+This runs structural plugin/skill checks, checker regression tests, skill
+formatting checks under representative consumer Prettier configurations, and
+Markdown linting. It does not execute or evaluate the skills in an agent host.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for authoring and manual versioning,
 and [tests/README.md](tests/README.md) for the initial benchmark results.
