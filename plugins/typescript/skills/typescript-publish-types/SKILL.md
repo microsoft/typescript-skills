@@ -190,21 +190,19 @@ branch, immediately before that branch's `default`** — not once at the top of 
 }
 ```
 
-A package that ships one format needs one branch per entry, `{ "types": ..., "default": ... }`, and
-no `.d.mts`/`.d.cts` at all.
+A package that ships one format needs one branch per entry, `{ "types": ..., "default": ... }`.
+Choose the declaration extension from the JavaScript entry point's extension, even for a
+single-format package.
 
 Rules:
 
-- **Within any object of conditions, `types` must come before `default`.** Conditions match in
-  order, so a `default` ahead of `types` wins and the entry ships untyped.
-- **Dual-format entries need two declaration files, one per branch.** A single `types` shared by
-  `import` and `require` cannot be right for both: under `node16`/`nodenext` a declaration's module
-  format comes from its extension, or from the package's `type` field for a plain `.d.ts`.
-- **A plain `.d.ts` is not "the CJS one".** In a `"type": "commonjs"` package it is CJS; in a
-  `"type": "module"` package it is ESM. Shipping a plain `.d.ts`/`.js` pair from a `"type": "module"`
-  package under a `require` condition is the masquerading error `attw` reports as
-  `CJSResolvesToESM`. Only add `.d.mts`/`.d.cts` where the two branches genuinely differ — but where
-  they do, add both.
+- **Within any object of conditions, `default` must always be last.** Conditions match in
+  order, so an earlier `default` wins over later conditions, including `types`.
+- **Every publicly accessible JavaScript file entry point needs a declaration file with the
+  corresponding extension: `.js` -> `.d.ts`, `.mjs` -> `.d.mts`, `.cjs` -> `.d.cts`.**
+  Route each entry point to its matching declaration. This applies to every format branch,
+  even when the declaration contents are identical; matching contents do not make different
+  extensions interchangeable.
 - **Legacy (Node10) resolution ignores `exports` entirely.** It reads top-level `types`, and for
   subpaths it reads `typesVersions` — as above, pointing at the CJS declaration, since Node10
   consumers are CJS. Restructuring `exports` will never fix a Node10 subpath failure.
