@@ -11,6 +11,7 @@ The `typescript` plugin currently includes these skills:
 | Skill | Purpose |
 | --- | --- |
 | [typescript-project-setup](plugins/typescript/skills/typescript-project-setup/SKILL.md) | Create a new TypeScript project with a suitable configuration. |
+| [typescript-publish-types](plugins/typescript/skills/typescript-publish-types/SKILL.md) | Publish TypeScript declarations that consumers can resolve from the packed package. |
 | [typescript-build-references](plugins/typescript/skills/typescript-build-references/SKILL.md) | Add project references, incremental builds, and declaration emission without breaking existing builds or public APIs. |
 | [typescript-strict](plugins/typescript/skills/typescript-strict/SKILL.md) | Enable strict type checking and fix resulting errors without weakening types, tests, or runtime behavior. |
 | [typescript-update](plugins/typescript/skills/typescript-update/SKILL.md) | Upgrade TypeScript using version-specific migration guidance. |
@@ -21,7 +22,7 @@ checks references with
 run through `npx`, and it adds `isolatedDeclarations` annotations by hand.
 
 The skills provide instructions for configuring projects, managing build
-references, enabling strict type checking, and upgrading TypeScript. Automatic
+references, publishing declarations with consumer verification, enabling strict type checking, and upgrading TypeScript. Automatic
 invocation is not disabled.
 
 ## Installation

@@ -4,7 +4,7 @@ This repository distributes skills under `plugins/<plugin>/skills/<skill>/`.
 Start with [CONTRIBUTING.md](CONTRIBUTING.md).
 
 - `typescript-project-setup`, `typescript-build-references`, `typescript-strict`,
-  and `typescript-update` are implemented. Keep unfinished skills' automatic
+  `typescript-update`, and `typescript-publish-types` are implemented. Keep unfinished skills' automatic
   invocation disabled and their not-implemented behavior explicit unless
   implementing and evaluating them.
 - Keep plugin metadata synchronized across root, Claude, and Codex manifests,
