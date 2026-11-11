@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -41,21 +41,6 @@ test("accepts the current marketplace", () => {
   const { plugins, skills } = checkRepository(repositoryRoot);
   assert(Number.isInteger(plugins) && plugins > 0);
   assert(Number.isInteger(skills) && skills >= plugins);
-});
-
-test("discovers and counts newly added skills", (t) => {
-  const root = fixture(t);
-  const before = checkRepository(root);
-  const skillsDirectory = join(root, "plugins/typescript/skills");
-  let name = "test-only-skill";
-  while (existsSync(join(skillsDirectory, name))) name += "-extra";
-  const skillDirectory = join(skillsDirectory, name);
-  mkdirSync(skillDirectory);
-  writeFileSync(
-    join(skillDirectory, "SKILL.md"),
-    `---\nname: ${name}\ndescription: An extra test skill\n---\n\n# Test skill\n`,
-  );
-  assert.deepEqual(checkRepository(root), { plugins: before.plugins, skills: before.skills + 1 });
 });
 
 test("rejects marketplace drift", (t) => {

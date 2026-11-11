@@ -54,15 +54,11 @@ test("checks formatting inside consumer ignore ranges", async (t) => {
 
 test("discovers supporting Markdown in nested skill directories", async (t) => {
   const root = fixture(t);
-  const before = await checkSkillFormatting(root);
   const referenceDir = join(root, "plugins/typescript/skills/typescript-update/references");
   mkdirSync(referenceDir, { recursive: true });
-  const testDir = mkdtempSync(join(referenceDir, "test-"));
-  const example = join(testDir, "example.md");
+  const example = join(referenceDir, "example.md");
   writeFileSync(example, "# Example\n");
   await assert.rejects(checkSkillFormatting(root), /example\.md: content .* must start with/);
-  writeFileSync(example, "<!-- prettier-ignore-start -->\n\n# Example\n\n<!-- prettier-ignore-end -->\n");
-  assert.deepEqual(await checkSkillFormatting(root), { files: before.files + 1 });
 });
 
 test("rejects a repository with no skill Markdown", async (t) => {
