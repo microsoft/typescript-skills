@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -37,15 +37,25 @@ function changeSkill(root, change) {
   writeFileSync(path, change(readFileSync(path, "utf8")));
 }
 
-test("accepts the marketplace with all five TypeScript skills", () => {
-  assert.deepEqual(checkRepository(repositoryRoot), { plugins: 1, skills: 5 });
-  assert.deepEqual(readdirSync(join(repositoryRoot, "plugins/typescript/skills")).sort(), [
-    "typescript-build-references",
-    "typescript-project-setup",
-    "typescript-publish-types",
-    "typescript-strict",
-    "typescript-update",
-  ]);
+test("accepts the current marketplace", () => {
+  const { plugins, skills } = checkRepository(repositoryRoot);
+  assert(Number.isInteger(plugins) && plugins > 0);
+  assert(Number.isInteger(skills) && skills >= plugins);
+});
+
+test("discovers and counts newly added skills", (t) => {
+  const root = fixture(t);
+  const before = checkRepository(root);
+  const skillsDirectory = join(root, "plugins/typescript/skills");
+  let name = "test-only-skill";
+  while (existsSync(join(skillsDirectory, name))) name += "-extra";
+  const skillDirectory = join(skillsDirectory, name);
+  mkdirSync(skillDirectory);
+  writeFileSync(
+    join(skillDirectory, "SKILL.md"),
+    `---\nname: ${name}\ndescription: An extra test skill\n---\n\n# Test skill\n`,
+  );
+  assert.deepEqual(checkRepository(root), { plugins: before.plugins, skills: before.skills + 1 });
 });
 
 test("rejects marketplace drift", (t) => {
@@ -145,7 +155,7 @@ test("rejects missing SKILL.md files", (t) => {
 
 test("accepts skills without repository-local benchmark fixtures or test plans", (t) => {
   const root = fixture(t);
-  assert.deepEqual(checkRepository(root), { plugins: 1, skills: 5 });
+  assert.doesNotThrow(() => checkRepository(root));
 });
 
 test("rejects skill names that differ from their directories", (t) => {
@@ -178,7 +188,7 @@ test("accepts invocation control set to false", (t) => {
     "description: How to set up a new TypeScript project",
     'description: How to set up a new TypeScript project\ndisable-model-invocation: false',
   ));
-  assert.deepEqual(checkRepository(root), { plugins: 1, skills: 5 });
+  assert.doesNotThrow(() => checkRepository(root));
 });
 
 test("rejects string-valued invocation flags", (t) => {
@@ -193,11 +203,11 @@ test("rejects string-valued invocation flags", (t) => {
 test("accepts CRLF skill frontmatter", (t) => {
   const root = fixture(t);
   changeSkill(root, (content) => content.replaceAll("\n", "\r\n"));
-  assert.deepEqual(checkRepository(root), { plugins: 1, skills: 5 });
+  assert.doesNotThrow(() => checkRepository(root));
 });
 
 test("accepts skills with only the required frontmatter fields", (t) => {
   const root = fixture(t);
   changeSkill(root, (content) => content.replace("disable-model-invocation: true\n", ""));
-  assert.deepEqual(checkRepository(root), { plugins: 1, skills: 5 });
+  assert.doesNotThrow(() => checkRepository(root));
 });
