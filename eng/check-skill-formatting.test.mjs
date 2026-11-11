@@ -55,7 +55,7 @@ test("checks formatting inside consumer ignore ranges", async (t) => {
 test("discovers supporting Markdown in nested skill directories", async (t) => {
   const root = fixture(t);
   const referenceDir = join(root, "plugins/typescript/skills/typescript-update/references");
-  mkdirSync(referenceDir);
+  mkdirSync(referenceDir, { recursive: true });
   writeFileSync(join(referenceDir, "example.md"), "# Example\n");
   await assert.rejects(checkSkillFormatting(root), /example\.md: content .* must start with/);
 });
