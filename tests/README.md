@@ -19,7 +19,7 @@ plugin**.
 | typescript-project-setup | 6.0/6.0 | +1.6% | -12.1% | +38.9 pp (11.1 -> 50.0%) |
 | typescript-strict | 8.3/8.3 | +162.0% | +270.4% | +29.1 pp (11.1 -> 40.2%) |
 | typescript-esm | 6.0/6.0 | +21.4% | +74.1% | 0.0 pp (66.7 -> 66.7%) |
-| typescript-publish-types | 3.2/4.2 | +50.8% | +61.4% | +49.1 pp (36.9 -> 86%) |
+| typescript-publish-types (3 repetitions per model) | 3.2/4.2 | +50.8% | +61.4% | +49.1 pp (36.9 -> 86%) |
 | typescript-build-references | 5.7/5.7 | +84.5% | +136.7% | +52.2 pp (30 -> 82.2%) |
 | typescript-build-project | 3.3/4.7 | +34.0% | +63.7% | 0.0 pp (71.7 -> 71.7%) |
 
