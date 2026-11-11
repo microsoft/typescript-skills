@@ -4,15 +4,18 @@ description: Invoke with `/typescript-report-issue`. Skill Version 1.0
 disable-model-invocation: true
 ---
 
+<!-- prettier-ignore-start -->
+
 To begin, ask the user to describe the bug they want to report in their own words.
 Ask follow-up questions as necessary until you understand what to do next.
 
 ## Pre-Work
 
 You should consult these documents before proceeding:
- * [TypeScript FAQ](https://github.com/microsoft/TypeScript/wiki/FAQ)
- * [tsc Security Properties](https://github.com/microsoft/TypeScript/wiki/tsc-Security-Properties)
- * [CONTRIBUTING.md](https://github.com/microsoft/TypeScript/blob/main/CONTRIBUTING.md)
+
+- [TypeScript FAQ](https://github.com/microsoft/TypeScript/wiki/FAQ)
+- [tsc Security Properties](https://github.com/microsoft/TypeScript/wiki/tsc-Security-Properties)
+- [CONTRIBUTING.md](https://github.com/microsoft/TypeScript/blob/main/CONTRIBUTING.md)
 
 You should also search for existing issues that might be a duplicate of what you're going to log.
 
@@ -29,11 +32,12 @@ Perform the necessary research, and asking the user questions where needed.
 Each section is described below.
 
 <!-- BEGIN AGENT TEMPLATE -->
-```md
 
+```md
 ## TypeScript Version
 
-The tested TypeScript version is _________.
+The tested TypeScript version is \***\*\_\*\***.
+
 <!--
 Include these fields if it's relevant to the bug
  - OS for bugs involving file watching, symlinks, or performance
@@ -62,6 +66,7 @@ name your harness version, model, and "Skill Version 1.0",
 e.g. Codex 3.141 + Claude Haiku 3.5 + Skill Version 1.0
 -->
 ```
+
 <!-- END AGENT TEMPLATE -->
 
 When writing, please try to be as succinct as possible.
@@ -74,12 +79,13 @@ Never describe what something **isn't** - don't say "This is a suggestion for a 
 You must explain why you're here vis a vis the human that initiated your process.
 
 Examples of good answers:
- * The user's goal is to submit a PR to this project, so I found a potential issue to make a PR for
- * The user wants to build their GitHub profile by finding bugs in TypeScript and fixing them
- * The user wants me to find as many bugs in as many popular repos as possible
- * The user encountered a problem and asked me to help narrow it down to a possible TypeScript bug
- * I was told to go look for differences between two versions of TypeScript
- * A code inspection process looking for potential problems turned up a possible issue
+
+- The user's goal is to submit a PR to this project, so I found a potential issue to make a PR for
+- The user wants to build their GitHub profile by finding bugs in TypeScript and fixing them
+- The user wants me to find as many bugs in as many popular repos as possible
+- The user encountered a problem and asked me to help narrow it down to a possible TypeScript bug
+- I was told to go look for differences between two versions of TypeScript
+- A code inspection process looking for potential problems turned up a possible issue
 
 You don't need to disclose what the human was doing or any personal information about them, but we do need to understand the human intent behind why you're here.
 
@@ -87,10 +93,11 @@ You don't need to disclose what the human was doing or any personal information 
 
 Your setup should include a minimal example.
 A minimal example does as many of these as possible:
- * Has zero dependencies. We will generally not accept issues that require complex type libraries. Try to "inline" definitions from dependencies until you have a self-contained repro.
- * Is a single file. While this isn't always possible, bugs should only use multiple files when it's actually needed.
- * Has minimal complexity. Code that isn't necessary to the repro should generally be removed
- * Keeps descriptive identifiers. Don't rename everything to single-character identifiers. You should rename things for simplicity's sake -- `EmployeeOnboardOptions` can just be `Options`, etc., but try to keep the *intent* of the code readable
+
+- Has zero dependencies. We will generally not accept issues that require complex type libraries. Try to "inline" definitions from dependencies until you have a self-contained repro.
+- Is a single file. While this isn't always possible, bugs should only use multiple files when it's actually needed.
+- Has minimal complexity. Code that isn't necessary to the repro should generally be removed
+- Keeps descriptive identifiers. Don't rename everything to single-character identifiers. You should rename things for simplicity's sake -- `EmployeeOnboardOptions` can just be `Options`, etc., but try to keep the _intent_ of the code readable
 
 If the setup involves more than a few files, publishing a sample repo is recommended. Ask your user for permission to do this.
 
@@ -114,3 +121,5 @@ Root-cause analysis should only be included with PRs.
 Do not include information about your proposed fix.
 
 You may, with reasonable justification, include this information if it feels particularly relevant (e.g. a performance issue and you took a profile).
+
+<!-- prettier-ignore-end -->
