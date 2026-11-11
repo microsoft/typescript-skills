@@ -82,8 +82,6 @@ consistent across its three manifests.
 Keep marketplace names, owners, and plugin entries consistent across hosts;
 host-specific display metadata can differ.
 
-Ownership is recorded in `.github/CODEOWNERS`. Update it when responsibility changes.
-
 ## Local checks
 
 Use Node.js 24 or later:

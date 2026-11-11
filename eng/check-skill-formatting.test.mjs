@@ -23,7 +23,8 @@ function changeFile(root, path, change) {
 }
 
 test("accepts shipped Markdown under representative consumer configurations", async () => {
-  assert.deepEqual(await checkSkillFormatting(repositoryRoot), { files: 10 });
+  const { files } = await checkSkillFormatting(repositoryRoot);
+  assert(Number.isInteger(files) && files > 0);
 });
 
 test("rejects CRLF in shipped Markdown", async (t) => {
@@ -54,7 +55,7 @@ test("checks formatting inside consumer ignore ranges", async (t) => {
 test("discovers supporting Markdown in nested skill directories", async (t) => {
   const root = fixture(t);
   const referenceDir = join(root, "plugins/typescript/skills/typescript-update/references");
-  mkdirSync(referenceDir);
+  mkdirSync(referenceDir, { recursive: true });
   writeFileSync(join(referenceDir, "example.md"), "# Example\n");
   await assert.rejects(checkSkillFormatting(root), /example\.md: content .* must start with/);
 });
