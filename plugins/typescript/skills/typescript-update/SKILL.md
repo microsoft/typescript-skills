@@ -12,7 +12,7 @@ Your role is to upgrade the project to the latest TypeScript version (7.x, or a 
 1. **Record the baseline (cheaply).**
    - Run `node <this skill's directory>/scripts/check-ts7.mjs` from the repository. It lists every `typescript` declaration that does not yet allow 7.x (root, workspace and standalone packages, peers, overrides and resolutions) and every tsconfig option TypeScript 7 rejects. That list is your upgrade checklist. If you commit during the upgrade, pass `--baseline <starting commit>` afterwards.
    - Note the package manager (lockfile, `packageManager` field), the `engines.node` range, and `node --version`.
-   - Identify the project's own `build`, `typecheck`/`check-types`, `test` and `lint` scripts.
+   - Identify the project's own `build`, `typecheck`/`check-types`, `test` and `lint` scripts. In a monorepo, use the root scripts that cover every package (e.g. `nx run-many`, `turbo run`, `pnpm -r`), not a per-package subset.
    - Reuse an existing `node_modules` if present. Otherwise do **one** non-interactive install (see [Long-Running and Interactive Commands](#long-running-and-interactive-commands)). Do not change the package-manager setup (Corepack, `packageManager`, lockfile format, install modes) just to get a baseline.
    - Run each of those scripts once, logging output, and note which pass and which fail.
    - A red or uninstallable baseline is **information to report, never a reason not to upgrade**. Continue with the upgrade and compare against the baseline at the end.
@@ -80,8 +80,8 @@ Check the `package.json` for any `@types/` entries and update them to the latest
 The upgrade is not done until this gate has been run after your last edit:
 
 1. Do a clean, lockfile-respecting install (e.g. `npm ci`, `pnpm install --frozen-lockfile`, `yarn install --immutable`). This proves `package.json`, the lockfile and any `patchedDependencies` agree.
-2. Confirm the installed compiler version, e.g. `npx tsc --version`, and rerun `check-ts7.mjs`. It must report no problems; fixing only the root package is not enough.
-3. Rerun each baseline command (build, typecheck, test, lint), including tests, and compare each one against the baseline.
+2. Confirm the installed compiler version, e.g. `npx tsc --version`, and rerun `check-ts7.mjs`. It must report no problems; fixing only the root package is not enough. It checks only declarations and tsconfig options, not code, so a clean report never replaces step 3.
+3. Rerun each baseline command (build, typecheck, test, lint) across the whole repository, including tests and packages you did not edit, and compare each one against the baseline. TypeScript 7 can report new errors in code that has no `typescript` declaration or tsconfig change of its own.
 4. Every command that passed in the baseline and fails now must be fixed, or reported in the summary as an explicit failure of the upgrade. Do not label it "out of scope". The upgrade is also not complete while the target `tsc` reports errors for the project, including errors from framework-generated tsconfigs.
 
 ## Summarize
