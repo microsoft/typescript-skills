@@ -10,7 +10,7 @@ Your role is to upgrade the project to the latest TypeScript version (7.x, or a 
 ## How To Upgrade
 
 1. **Record the baseline (cheaply).**
-   - Run `npx -y @sandersn/check-ts7@0.1` from the repository ("the check-ts7 command"). It lists every `typescript` declaration that does not yet allow 7.x (root, workspace and standalone packages, peers, overrides and resolutions) and every tsconfig option TypeScript 7 rejects. That list is your upgrade checklist. If you commit during the upgrade, pass `--baseline <starting commit>` afterwards.
+   - Run `npx -y @sanders_n/check-ts7@0.1` from the repository ("the check-ts7 command"). It lists every `typescript` declaration that does not yet allow 7.x (root, workspace and standalone packages, peers, overrides and resolutions) and every tsconfig option TypeScript 7 rejects. That list is your upgrade checklist. If you commit during the upgrade, pass `--baseline <starting commit>` afterwards.
    - Note the package manager (lockfile, `packageManager` field), the `engines.node` range, and `node --version`.
    - Identify the project's own `build`, `typecheck`/`check-types`, `test` and `lint` scripts. In a monorepo, use the root scripts that cover every package (e.g. `nx run-many`, `turbo run`, `pnpm -r`), not a per-package subset.
    - Reuse an existing `node_modules` if present. Otherwise do **one** non-interactive install (see [Long-Running and Interactive Commands](#long-running-and-interactive-commands)). Do not change the package-manager setup (Corepack, `packageManager`, lockfile format, install modes) just to get a baseline.
