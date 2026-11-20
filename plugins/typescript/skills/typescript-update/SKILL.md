@@ -10,14 +10,15 @@ Your role is to upgrade the project to the latest TypeScript version (7.x, or a 
 ## How To Upgrade
 
 1. **Record the baseline (cheaply).**
-   - Read every `package.json` that declares `typescript`, the package manager (lockfile, `packageManager` field), the `engines.node` range, and `node --version`.
-   - Identify the project's own `build`, `typecheck`/`check-types`, `test` and `lint` scripts.
+   - Run `npx -y @sanders_n/check-ts7@0.1` from the repository ("the check-ts7 command"). It lists every `typescript` declaration that does not yet allow 7.x (root, workspace and standalone packages, peers, overrides and resolutions) and every tsconfig option TypeScript 7 rejects. That list is your upgrade checklist. If you commit during the upgrade, pass `--baseline <starting commit>` afterwards.
+   - Note the package manager (lockfile, `packageManager` field), the `engines.node` range, and `node --version`.
+   - Identify the project's own `build`, `typecheck`/`check-types`, `test` and `lint` scripts. In a monorepo, use the root scripts that cover every package (e.g. `nx run-many`, `turbo run`, `pnpm -r`), not a per-package subset.
    - Reuse an existing `node_modules` if present. Otherwise do **one** non-interactive install (see [Long-Running and Interactive Commands](#long-running-and-interactive-commands)). Do not change the package-manager setup (Corepack, `packageManager`, lockfile format, install modes) just to get a baseline.
    - Run each of those scripts once, logging output, and note which pass and which fail.
    - A red or uninstallable baseline is **information to report, never a reason not to upgrade**. Continue with the upgrade and compare against the baseline at the end.
 2. **Read the version guides before your first edit.** Always read [6to7.md](6to7.md). Also read [5to6.md](5to6.md) if starting below 6.0, and [4to5.md](4to5.md) if starting below 5.0. Treat them as checklists of changes to apply up front, not as references to consult only after something breaks.
 3. **Choose the package layout.** Run the API-consumer check in [6to7.md](6to7.md#does-the-project-need-the-typescript-api). If anything in the project or its dependencies uses the TypeScript API, use the side-by-side layout (`typescript` aliased to `@typescript/typescript6`, `@typescript/native` aliased to `typescript@7`) from the start. Otherwise install plain `typescript@7`.
-4. **Apply all config changes in one pass.** Edit `tsconfig*.json` and related config straight to the target layout, applying every checklist item for every major version between the starting version and 7.0 (e.g. `types`, `module`/`moduleResolution`, `baseUrl`/`paths`, `rootDir`, `esModuleInterop`, removed options). Update `@types/*` and TypeScript-dependent tools (see [`@types` Dependencies](#types-dependencies)).
+4. **Apply all tsconfig and package.json changes in one pass.** Upgrade every declaration check-ts7 lists, in place: do not delete per-package `typescript` declarations or leave workspace packages on 5.x/6.x, and widen `peerDependencies` to accept `^7`. Edit `tsconfig*.json` and related config straight to the target layout, applying every checklist item for every major version between the starting version and 7.0 (e.g. `types`, `module`/`moduleResolution`, `baseUrl`/`paths`, `rootDir`, `esModuleInterop`, removed options). Update `@types/*` and TypeScript-dependent tools (see [`@types` Dependencies](#types-dependencies)).
 5. **Install the target versions once**, then typecheck with the new `tsc` and fix the errors.
    - Do not install and build every intermediate major version. At most, you may run one optional typecheck with TypeScript 6.0 (e.g. `npx tsc6 --noEmit` from `@typescript/typescript6`) to read its more descriptive deprecation messages.
 6. **Run the [Completion Gate](#completion-gate)**, then **[Summarize](#summarize)**.
@@ -79,8 +80,8 @@ Check the `package.json` for any `@types/` entries and update them to the latest
 The upgrade is not done until this gate has been run after your last edit:
 
 1. Do a clean, lockfile-respecting install (e.g. `npm ci`, `pnpm install --frozen-lockfile`, `yarn install --immutable`). This proves `package.json`, the lockfile and any `patchedDependencies` agree.
-2. Confirm the installed compiler version, e.g. `npx tsc --version`.
-3. Rerun each baseline command (build, typecheck, test, lint), including tests, and compare each one against the baseline.
+2. Confirm the installed compiler version, e.g. `npx tsc --version`, and rerun the check-ts7 command. It must report no problems; fixing only the root package is not enough. It checks only declarations and tsconfig options, not code, so a clean report never replaces step 3.
+3. Rerun each baseline command (build, typecheck, test, lint) across the whole repository, including tests and packages you did not edit, and compare each one against the baseline. TypeScript 7 can report new errors in code that has no `typescript` declaration or tsconfig change of its own.
 4. Every command that passed in the baseline and fails now must be fixed, or reported in the summary as an explicit failure of the upgrade. Do not label it "out of scope". The upgrade is also not complete while the target `tsc` reports errors for the project, including errors from framework-generated tsconfigs.
 
 ## Summarize
