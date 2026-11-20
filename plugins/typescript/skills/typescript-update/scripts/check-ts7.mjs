@@ -149,8 +149,8 @@ const LOCKFILES = [
  * configuration), plus top-level packages installed separately with their own
  * lockfile, such as website/ or samples/.
  */
-async function packageDirectories() {
-  const members = new Set(["."]);
+async function findPackageDirectories() {
+  const packageDirectories = new Set(["."]);
   try {
     // pnpm first: a pnpm-workspace.yaml is authoritative even when package.json also has "workspaces".
     const { PnpmTool, YarnTool, LernaTool, RushTool, BoltTool, RootTool } =
@@ -159,7 +159,9 @@ async function packageDirectories() {
       tools: [PnpmTool, YarnTool, LernaTool, RushTool, BoltTool, RootTool],
     });
     for (const pkg of packages)
-      members.add(relative(process.cwd(), pkg.dir).split(sep).join("/") || ".");
+      packageDirectories.add(
+        relative(process.cwd(), pkg.dir).split(sep).join("/") || ".",
+      );
   } catch (error) {
     console.error(
       `check-ts7: could not list workspace packages (${error.message}); checking the root and standalone packages only`,
@@ -176,24 +178,24 @@ async function packageDirectories() {
       existsSync(join(entry.name, "package.json")) &&
       LOCKFILES.some((lock) => existsSync(join(entry.name, lock)))
     )
-      members.add(entry.name);
+      packageDirectories.add(entry.name);
   }
-  return members;
+  return packageDirectories;
 }
 
 // ── package.json declarations ──────────────────────────────────────────────────
 
-function declarations(manifest) {
+function declarations(packageJson) {
   const found = [];
-  if (!manifest || typeof manifest !== "object") return found;
+  if (!packageJson || typeof packageJson !== "object") return found;
   for (const section of DEPENDENCY_SECTIONS) {
-    const specifier = manifest[section]?.typescript;
+    const specifier = packageJson[section]?.typescript;
     if (typeof specifier === "string") found.push({ section, specifier });
   }
   const overrideSources = [
-    ["resolutions", manifest.resolutions],
-    ["overrides", manifest.overrides],
-    ["pnpm.overrides", manifest.pnpm?.overrides],
+    ["resolutions", packageJson.resolutions],
+    ["overrides", packageJson.overrides],
+    ["pnpm.overrides", packageJson.pnpm?.overrides],
   ];
   for (const [source, map] of overrideSources) {
     for (const [key, specifier] of Object.entries(map ?? {})) {
@@ -211,11 +213,11 @@ function declarations(manifest) {
   return found;
 }
 
-const hasNative7 = (manifest) =>
+const hasNative7 = (packageJson) =>
   ["dependencies", "devDependencies", "optionalDependencies"].some(
     (section) => {
       const alias = parseAlias(
-        manifest?.[section]?.["@typescript/native"] ?? "",
+        packageJson?.[section]?.["@typescript/native"] ?? "",
       );
       return alias.name === "typescript" && requires7(alias.range);
     },
@@ -223,8 +225,8 @@ const hasNative7 = (manifest) =>
 
 function checkDeclaration(
   file,
-  manifest,
-  rootManifest,
+  packageJson,
+  rootPackageJson,
   { section, specifier, override },
 ) {
   const where = `${file} ${section}: "${specifier}"`;
@@ -239,7 +241,7 @@ function checkDeclaration(
       : `${where} does not accept 7.x. Widen it, e.g. "${specifier} || ^7"`;
   }
   if (alias.name === "@typescript/typescript6" && !override) {
-    return hasNative7(manifest) || hasNative7(rootManifest)
+    return hasNative7(packageJson) || hasNative7(rootPackageJson)
       ? undefined
       : `${where} is the 6.0 API alias, but no "@typescript/native": "npm:typescript@^7" is declared in this package or the workspace root`;
   }
@@ -261,17 +263,17 @@ function sameKind(before, after) {
   );
 }
 
-function checkManifests(baseline, members) {
+function checkPackageJsons(baseline, packageDirectories) {
   const problems = [];
   const file = (dir) => (dir === "." ? "package.json" : `${dir}/package.json`);
-  const rootManifest = readJson("package.json");
-  for (const dir of [...members].sort()) {
-    const manifest = readJson(file(dir));
-    for (const declaration of declarations(manifest)) {
+  const rootPackageJson = readJson("package.json");
+  for (const dir of [...packageDirectories].sort()) {
+    const packageJson = readJson(file(dir));
+    for (const declaration of declarations(packageJson)) {
       const problem = checkDeclaration(
         file(dir),
-        manifest,
-        rootManifest,
+        packageJson,
+        rootPackageJson,
         declaration,
       );
       if (problem) problems.push(problem);
@@ -285,7 +287,7 @@ function checkManifests(baseline, members) {
     );
     return problems;
   }
-  for (const dir of [...members].sort()) {
+  for (const dir of [...packageDirectories].sort()) {
     let before;
     try {
       before = JSON.parse(git(["show", `${baseline}:${file(dir)}`]));
@@ -306,9 +308,9 @@ function checkManifests(baseline, members) {
 // ── tsconfig options ───────────────────────────────────────────────────────────
 
 /** Configs a package builds with: tsconfig files at its root, and configs its scripts pass to tsc. */
-function projectConfigs(members) {
+function tsconfigs(packageDirectories) {
   const configs = [];
-  for (const dir of members) {
+  for (const dir of packageDirectories) {
     for (const name of readdirSync(dir))
       if (/^tsconfig.*\.json$/.test(name)) configs.push(resolve(dir, name));
     const scripts = Object.values(
@@ -345,9 +347,9 @@ function includeRoot(include) {
     : undefined;
 }
 
-function checkConfigs(members) {
+function checkConfigs(packageDirectories) {
   const root = process.cwd();
-  const queue = projectConfigs(members);
+  const queue = tsconfigs(packageDirectories);
   const seen = new Set();
   const perConfig = [];
   // Option problems usually come from one shared base config, so they are grouped by the option and value.
@@ -444,10 +446,10 @@ try {
   console.error("check-ts7: run this inside the project's git repository");
   process.exit(2);
 }
-const members = await packageDirectories();
+const packageDirectories = await findPackageDirectories();
 const problems = [
-  ...checkManifests(baseline, members),
-  ...checkConfigs(members),
+  ...checkPackageJsons(baseline, packageDirectories),
+  ...checkConfigs(packageDirectories),
 ];
 if (problems.length === 0) {
   console.log(
