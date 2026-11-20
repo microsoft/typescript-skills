@@ -15,6 +15,7 @@ The `typescript` plugin currently includes these skills:
 | [typescript-build-references](plugins/typescript/skills/typescript-build-references/SKILL.md) | Add project references, incremental builds, and declaration emission without breaking existing builds or public APIs. |
 | [typescript-strict](plugins/typescript/skills/typescript-strict/SKILL.md) | Enable strict type checking and fix resulting errors without weakening types, tests, or runtime behavior. |
 | [typescript-update](plugins/typescript/skills/typescript-update/SKILL.md) | Upgrade TypeScript using version-specific migration guidance. |
+| [typescript-webpack-to-oxc](plugins/typescript/skills/typescript-webpack-to-oxc/SKILL.md) | Replace webpack and/or ESLint with Oxc-based bundling and Oxlint while preserving scripts, public artifacts, and runtime behavior. |
 
 `typescript-build-references` has no bundled scripts. In workspace monorepos it
 checks references with
@@ -22,7 +23,8 @@ checks references with
 run through `npx`, and it adds `isolatedDeclarations` annotations by hand.
 
 The skills provide instructions for configuring projects, managing build
-references, publishing declarations with consumer verification, enabling strict type checking, and upgrading TypeScript. Automatic
+references, publishing declarations with consumer verification, enabling strict type checking,
+upgrading TypeScript, and migrating webpack/ESLint to Oxc tooling. Automatic
 invocation is not disabled.
 
 ## Installation
