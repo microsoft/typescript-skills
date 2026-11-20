@@ -55,6 +55,7 @@ const workspace = {
     devDependencies: { typescript: "^5.4.0" },
   },
   "packages/a/package.json": {
+    name: "a",
     devDependencies: { typescript: "5.4.5" },
     peerDependencies: { typescript: "^5.0.0" },
   },
@@ -90,6 +91,7 @@ test("accepts plain ^7, widened peers and the side-by-side layout", (t) => {
       },
     },
     "packages/a/package.json": {
+      name: "a",
       devDependencies: { typescript: "^7.0.2" },
       peerDependencies: { typescript: "^5.0.0 || ^7" },
     },
@@ -104,7 +106,10 @@ test("reports declarations deleted instead of upgraded", (t) => {
       workspaces: ["packages/*"],
       devDependencies: { typescript: "^7.0.2" },
     },
-    "packages/a/package.json": { peerDependencies: { typescript: ">=5" } },
+    "packages/a/package.json": {
+      name: "a",
+      peerDependencies: { typescript: ">=5" },
+    },
   });
   const { problems } = repo.check();
   assert.deepEqual(problems, [
@@ -130,21 +135,35 @@ test("reports removed tsconfig options, including inherited generated configs", 
     "test/fixtures/old/tsconfig.json": { compilerOptions: { baseUrl: "." } },
   });
   const { problems } = repo.check();
-  assert.equal(problems.length, 4);
-  assert.ok(
-    problems.some((p) => p.startsWith('- tsconfig.json: "baseUrl" is removed')),
-  );
+  const head = (p) => p.slice(0, p.indexOf('"', p.indexOf(":") + 3) + 1);
+  assert.deepEqual(problems.map(head).sort(), [
+    '- tsconfig.json (through "extends"): "importsNotUsedAsValues"',
+    '- tsconfig.json (through "extends"): "moduleResolution"',
+    '- tsconfig.json: "baseUrl"',
+    '- tsconfig.json: sets "',
+  ]);
   assert.ok(
     problems.some((p) => p.includes('set "rootDir"') && p.includes('"./src"')),
   );
-  assert.ok(
-    problems.some((p) =>
-      p.startsWith('- .generated/tsconfig.json: "importsNotUsedAsValues"'),
-    ),
-  );
-  assert.ok(
-    problems.some((p) =>
-      p.startsWith('- .generated/tsconfig.json: "moduleResolution": "node10"'),
-    ),
+});
+
+test("reports an option once, at the base config that sets it", (t) => {
+  const repo = project(t, {
+    "package.json": {
+      workspaces: ["packages/*"],
+      devDependencies: { typescript: "^7.0.2" },
+    },
+    "tsconfig.base.json": { compilerOptions: { baseUrl: "." } },
+    "packages/a/package.json": { name: "a" },
+    "packages/a/tsconfig.json": { extends: "../../tsconfig.base.json" },
+    "packages/b/package.json": { name: "b" },
+    "packages/b/tsconfig.json": { extends: "../../tsconfig.base.json" },
+  });
+  const { problems } = repo.check();
+  assert.equal(problems.length, 1);
+  assert.match(problems[0], /^- tsconfig\.base\.json: "baseUrl" is removed/);
+  assert.match(
+    problems[0],
+    /Also inherited by 2 other config\(s\): packages\/a\/tsconfig\.json, packages\/b\/tsconfig\.json\.$/,
   );
 });

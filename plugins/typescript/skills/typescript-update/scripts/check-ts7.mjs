@@ -1,18 +1,50 @@
 #!/usr/bin/env node
 // Lists what still blocks a TypeScript 7 upgrade: every `typescript` declaration
-// that does not allow 7.x (in every package.json, including peers, overrides and
-// resolutions) and every tsconfig option that TypeScript 7 rejects.
+// that does not allow 7.x (in the root, workspace and standalone packages,
+// including peers, overrides and resolutions) and every tsconfig option that
+// TypeScript 7 rejects.
 //
-// Usage (from anywhere inside the project's git repository):
-//   node <skill-dir>/scripts/check-ts7.mjs [--baseline <git-ref>]
+// Usage, from anywhere inside the project's git repository:
+//   npx -y -p semver@7 -p @manypkg/get-packages@2 -p get-tsconfig@4 -- \
+//     node <skill-dir>/scripts/check-ts7.mjs [--baseline <git-ref>]
 //
 // --baseline (default HEAD) is the commit before the upgrade. It is used to find
 // declarations that were deleted instead of upgraded.
-// Exits 1 if anything is listed, 0 if nothing is. Dependency-free and compatible
-// with Node.js 16.
+// Exits 1 if anything is listed, 0 if nothing is, 2 on usage errors. Runs on
+// Node.js 16 and later.
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import { delimiter, dirname, join, relative, resolve, sep } from "node:path";
+
+const NPX_COMMAND =
+  "npx -y -p semver@7 -p @manypkg/get-packages@2 -p get-tsconfig@4 -- node <skill-dir>/scripts/check-ts7.mjs";
+
+/** Load a dependency from the npx run directory (or, in this repository's tests, from node_modules). */
+function load(name) {
+  // npx's own install directory comes first, so the project's copies (e.g. an old semver) cannot shadow it.
+  const bins = (process.env.PATH ?? "")
+    .split(delimiter)
+    .filter((entry) => entry.endsWith(join("node_modules", ".bin")));
+  const roots = [
+    ...bins.filter((bin) => bin.includes(`${sep}_npx${sep}`)),
+    import.meta.url,
+    ...bins.filter((bin) => !bin.includes(`${sep}_npx${sep}`)),
+  ].map((root) =>
+    root === import.meta.url ? root : join(root, "..", "..", "package.json"),
+  );
+  for (const root of roots) {
+    try {
+      return createRequire(root)(name);
+    } catch {}
+  }
+  console.error(`check-ts7: cannot load ${name}. Run it as:\n  ${NPX_COMMAND}`);
+  process.exit(2);
+}
+const semver = load("semver");
+const { getPackages } = load("@manypkg/get-packages");
+const tools = load("@manypkg/tools");
+const { parseTsconfig } = load("get-tsconfig");
 
 const DEPENDENCY_SECTIONS = [
   "dependencies",
@@ -54,85 +86,27 @@ const REMOVED_VALUES = {
 
 // ── Versions and ranges ───────────────────────────────────────────────────────
 
-const INFINITY = Number.MAX_SAFE_INTEGER;
-const version = (major, minor = 0, patch = 0) =>
-  major * 1e8 + minor * 1e4 + patch;
-const TS7 = [version(7), version(8)];
-
-/** [low, high) bounds of one comparator such as `^5.4`, `>=4.8.4`, `7.x` or `*`. */
-function comparatorBounds(text) {
-  const match =
-    /^(\^|~|>=|<=|>|<|=)?v?(\d+|[x*])(?:\.(\d+|[x*]))?(?:\.(\d+|[x*]))?/i.exec(
-      text,
+/** The lowest version the range allows is 7.x, as an installed dependency must be. */
+function requires7(range) {
+  try {
+    const lowest = semver.minVersion(range);
+    return (
+      lowest !== null &&
+      semver.satisfies(lowest, "^7", { includePrerelease: true })
     );
-  if (!match || /^[x*]$/i.test(match[2])) return [0, INFINITY];
-  const [, op = "", majorText, minorText, patchText] = match;
-  const wild = (part) => part === undefined || /^[x*]$/i.test(part);
-  const major = Number(majorText);
-  const minor = wild(minorText) ? 0 : Number(minorText);
-  const patch = wild(patchText) ? 0 : Number(patchText);
-  const low = version(major, minor, patch);
-  const partialHigh = wild(minorText)
-    ? version(major + 1)
-    : wild(patchText)
-      ? version(major, minor + 1)
-      : low + 1;
-  switch (op) {
-    case "^":
-      return [
-        low,
-        major > 0 || wild(minorText)
-          ? version(major + 1)
-          : version(0, minor + 1),
-      ];
-    case "~":
-      return [
-        low,
-        wild(minorText) ? version(major + 1) : version(major, minor + 1),
-      ];
-    case ">=":
-      return [low, INFINITY];
-    case ">":
-      return [partialHigh, INFINITY];
-    case "<=":
-      return [0, partialHigh];
-    case "<":
-      return [0, low];
-    default:
-      return [low, partialHigh];
+  } catch {
+    return false;
   }
 }
 
-/** Each `||` alternative of a range as [low, high) bounds. */
-function rangeBounds(range) {
-  return range.split("||").map((alternative) => {
-    const hyphen = /^(\S+)\s+-\s+(\S+)$/.exec(alternative.trim());
-    const comparators = hyphen
-      ? [`>=${hyphen[1]}`, `<=${hyphen[2]}`]
-      : alternative
-          .trim()
-          .replace(/(\^|~|>=|<=|>|<|=)\s+/g, "$1")
-          .split(/\s+/)
-          .filter(Boolean);
-    let low = 0;
-    let high = INFINITY;
-    for (const comparator of comparators) {
-      const [l, h] = comparatorBounds(comparator);
-      low = Math.max(low, l);
-      high = Math.min(high, h);
-    }
-    return [low, high];
-  });
-}
-
-/** The lowest version a range allows is 7.x, as an installed dependency must be. */
-const requires7 = (range) => {
-  const lowest = Math.min(...rangeBounds(range).map(([low]) => low));
-  return lowest >= TS7[0] && lowest < TS7[1];
-};
 /** Some 7.x version is allowed, as a peer dependency must be. */
-const allows7 = (range) =>
-  rangeBounds(range).some(([low, high]) => low < TS7[1] && high > TS7[0]);
+function allows7(range) {
+  try {
+    return semver.intersects(range, "^7", { includePrerelease: true });
+  } catch {
+    return false;
+  }
+}
 
 function parseAlias(specifier) {
   if (!specifier.startsWith("npm:"))
@@ -152,19 +126,14 @@ const git = (args) =>
     stdio: ["ignore", "pipe", "ignore"],
     maxBuffer: 1 << 30,
   });
-const outsideNodeModules = (file) =>
-  file && !file.split("/").includes("node_modules");
-const gitFiles = (...patterns) =>
-  git([
-    "ls-files",
-    "--cached",
-    "--others",
-    "--exclude-standard",
-    "--",
-    ...patterns,
-  ])
-    .split("\n")
-    .filter(outsideNodeModules);
+
+function readJson(file) {
+  try {
+    return JSON.parse(readFileSync(file, "utf8"));
+  } catch {
+    return undefined;
+  }
+}
 
 const LOCKFILES = [
   "package-lock.json",
@@ -175,90 +144,41 @@ const LOCKFILES = [
   "bun.lockb",
 ];
 
-/** Root, workspace member (npm/yarn `workspaces`, pnpm-workspace.yaml, lerna.json) and top-level standalone package directories. */
-function workspaceMembers(manifestFiles) {
-  const root = readJson("package.json") ?? {};
-  const patterns = [].concat(
-    Array.isArray(root.workspaces)
-      ? root.workspaces
-      : (root.workspaces?.packages ?? []),
-    readJson("lerna.json")?.packages ?? [],
-  );
-  if (existsSync("pnpm-workspace.yaml")) {
-    const lines = readFileSync("pnpm-workspace.yaml", "utf8").split("\n");
-    const start = lines.findIndex((line) => /^packages:\s*$/.test(line));
-    for (const line of start < 0 ? [] : lines.slice(start + 1)) {
-      const item = /^\s+-\s*['"]?([^'"#]+?)['"]?\s*(#.*)?$/.exec(line);
-      if (item) patterns.push(item[1]);
-      else if (/^\S/.test(line)) break;
-    }
-  }
-  const toRegExp = (glob) =>
-    new RegExp(
-      `^${glob
-        .replace(/^\.\//, "")
-        .replace(/\/+$/, "")
-        .split("/")
-        .map((part) =>
-          part === "**"
-            ? ".*"
-            : part.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*/g, "[^/]*"),
-        )
-        .join("/")}$`,
-    );
-  const include = patterns.filter((p) => !p.startsWith("!")).map(toRegExp);
-  const exclude = patterns
-    .filter((p) => p.startsWith("!"))
-    .map((p) => toRegExp(p.slice(1)));
+/**
+ * Root and workspace member directories (from the package manager's workspace
+ * configuration), plus top-level packages installed separately with their own
+ * lockfile, such as website/ or samples/.
+ */
+async function packageDirectories() {
   const members = new Set(["."]);
-  for (const file of manifestFiles) {
-    const dir = dirname(file);
+  try {
+    // pnpm first: a pnpm-workspace.yaml is authoritative even when package.json also has "workspaces".
+    const { PnpmTool, YarnTool, LernaTool, RushTool, BoltTool, RootTool } =
+      tools;
+    const { packages } = await getPackages(process.cwd(), {
+      tools: [PnpmTool, YarnTool, LernaTool, RushTool, BoltTool, RootTool],
+    });
+    for (const pkg of packages)
+      members.add(relative(process.cwd(), pkg.dir).split(sep).join("/") || ".");
+  } catch (error) {
+    console.error(
+      `check-ts7: could not list workspace packages (${error.message}); checking the root and standalone packages only`,
+    );
+  }
+  for (const entry of readdirSync(".", { withFileTypes: true })) {
     if (
-      include.some((re) => re.test(dir)) &&
-      !exclude.some((re) => re.test(dir))
+      !entry.isDirectory() ||
+      entry.name === "node_modules" ||
+      entry.name.startsWith(".")
     )
-      members.add(dir);
-    // Top-level packages installed separately (their own lockfile), e.g. website/ or samples/.
-    else if (
-      !dir.includes("/") &&
-      LOCKFILES.some((lockfile) => existsSync(join(dir, lockfile)))
+      continue;
+    if (
+      existsSync(join(entry.name, "package.json")) &&
+      LOCKFILES.some((lock) => existsSync(join(entry.name, lock)))
     )
-      members.add(dir);
+      members.add(entry.name);
   }
   return members;
-}
-
-/** JSON with comments and trailing commas, as tsconfig allows. */
-function parseJsonc(text) {
-  let out = "";
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (c === '"') {
-      const string = /"(?:[^"\\]|\\.)*"/y;
-      string.lastIndex = i;
-      const match = string.exec(text);
-      if (!match) throw new Error("unterminated string");
-      out += match[0];
-      i += match[0].length - 1;
-    } else if (c === "/" && text[i + 1] === "/") {
-      while (i < text.length && text[i] !== "\n") i++;
-      out += "\n";
-    } else if (c === "/" && text[i + 1] === "*") {
-      i = text.indexOf("*/", i + 2);
-      if (i < 0) break;
-      i++;
-    } else out += c;
-  }
-  return JSON.parse(out.replace(/,(\s*[}\]])/g, "$1"));
-}
-
-function readJson(file, jsonc = false) {
-  try {
-    const text = readFileSync(file, "utf8");
-    return jsonc ? parseJsonc(text) : JSON.parse(text);
-  } catch {
-    return undefined;
-  }
 }
 
 // ── package.json declarations ──────────────────────────────────────────────────
@@ -341,32 +261,15 @@ function sameKind(before, after) {
   );
 }
 
-function checkManifests(baseline) {
+function checkManifests(baseline, members) {
   const problems = [];
-  const allFiles = gitFiles("package.json", "**/package.json");
-  const members = workspaceMembers(allFiles);
-  const files = new Set(allFiles.filter((file) => members.has(dirname(file))));
-  let baselineFiles = [];
-  try {
-    baselineFiles = git(["ls-tree", "-r", "--name-only", baseline])
-      .split("\n")
-      .filter(
-        (file) =>
-          /(^|\/)package\.json$/.test(file) &&
-          outsideNodeModules(file) &&
-          members.has(dirname(file)),
-      );
-  } catch {
-    problems.push(
-      `cannot read git ref ${baseline}; deleted declarations were not checked`,
-    );
-  }
+  const file = (dir) => (dir === "." ? "package.json" : `${dir}/package.json`);
   const rootManifest = readJson("package.json");
-  for (const file of [...files].sort()) {
-    const manifest = readJson(file);
+  for (const dir of [...members].sort()) {
+    const manifest = readJson(file(dir));
     for (const declaration of declarations(manifest)) {
       const problem = checkDeclaration(
-        file,
+        file(dir),
         manifest,
         rootManifest,
         declaration,
@@ -374,50 +277,40 @@ function checkManifests(baseline) {
       if (problem) problems.push(problem);
     }
   }
-  for (const file of baselineFiles.sort()) {
+  try {
+    git(["rev-parse", "--verify", `${baseline}^{commit}`]);
+  } catch {
+    problems.push(
+      `cannot read git ref ${baseline}; deleted declarations were not checked`,
+    );
+    return problems;
+  }
+  for (const dir of [...members].sort()) {
     let before;
     try {
-      before = JSON.parse(git(["show", `${baseline}:${file}`]));
+      before = JSON.parse(git(["show", `${baseline}:${file(dir)}`]));
     } catch {
       continue;
     }
-    const now = files.has(file) ? declarations(readJson(file)) : [];
+    const now = declarations(readJson(file(dir)));
     for (const declaration of declarations(before)) {
       if (!now.some((after) => sameKind(declaration, after)))
         problems.push(
-          `${file} ${declaration.section}: "${declaration.specifier}" was deleted. Keep the declaration and upgrade it instead`,
+          `${file(dir)} ${declaration.section}: "${declaration.specifier}" was deleted. Keep the declaration and upgrade it instead`,
         );
     }
   }
-  return { problems, members };
+  return problems;
 }
 
 // ── tsconfig options ───────────────────────────────────────────────────────────
 
-function resolveExtends(from, specifier) {
-  const candidates = [];
-  if (specifier.startsWith(".") || specifier.startsWith("/")) {
-    const base = resolve(dirname(from), specifier);
-    candidates.push(base, `${base}.json`, join(base, "tsconfig.json"));
-  } else {
-    for (let dir = resolve(dirname(from)); ; dir = dirname(dir)) {
-      const base = join(dir, "node_modules", specifier);
-      candidates.push(base, `${base}.json`, join(base, "tsconfig.json"));
-      if (dirname(dir) === dir) break;
-    }
-  }
-  return candidates.find(
-    (file) => existsSync(file) && readJson(file, true) !== undefined,
-  );
-}
-
 /** Configs a package builds with: tsconfig files at its root, and configs its scripts pass to tsc. */
 function projectConfigs(members) {
   const configs = [];
-  const atRoot = new Set(gitFiles("tsconfig*.json", "**/tsconfig*.json"));
-  for (const file of atRoot)
-    if (members.has(dirname(file))) configs.push(resolve(file));
   for (const dir of members) {
+    for (const name of readdirSync(dir))
+      if (/^tsconfig.*\.json$/.test(name)) configs.push(resolve(dir, name));
     const scripts = Object.values(
       readJson(join(dir, "package.json"))?.scripts ?? {},
     );
@@ -453,38 +346,28 @@ function includeRoot(include) {
 }
 
 function checkConfigs(members) {
-  const problems = [];
   const root = process.cwd();
   const queue = projectConfigs(members);
-  const effective = new Map();
-  const options = (file) => {
-    if (effective.has(file)) return effective.get(file);
-    effective.set(file, {});
-    const config = readJson(file, true) ?? {};
-    const bases = []
-      .concat(config.extends ?? [])
-      .map((spec) => resolveExtends(file, spec))
-      .filter(Boolean);
-    const merged = Object.assign(
-      {},
-      ...bases.map(options),
-      config.compilerOptions,
-    );
-    effective.set(file, merged);
-    return merged;
-  };
   const seen = new Set();
+  const perConfig = [];
+  // Option problems usually come from one shared base config, so they are grouped by the option and value.
+  const inherited = new Map();
+  const unreadable = new Map();
   while (queue.length) {
     const file = queue.shift();
-    if (seen.has(file)) continue;
+    if (seen.has(file) || !existsSync(file)) continue;
     seen.add(file);
-    const config = readJson(file, true);
-    if (!config) continue;
     const name = relative(root, file);
-    // Generated configs that the project extends (e.g. .svelte-kit/tsconfig.json) are checked too.
-    for (const spec of [].concat(config.extends ?? [])) {
-      const base = resolveExtends(file, spec);
-      if (base && outsideNodeModules(relative(root, base))) queue.push(base);
+    let config;
+    try {
+      // Effective configuration, with `extends` (including generated configs such as .svelte-kit/tsconfig.json) merged in.
+      config = parseTsconfig(file);
+    } catch (error) {
+      unreadable.set(error.message, [
+        ...(unreadable.get(error.message) ?? []),
+        name,
+      ]);
+      continue;
     }
     for (const reference of config.references ?? []) {
       if (typeof reference?.path !== "string") continue;
@@ -493,42 +376,62 @@ function checkConfigs(members) {
         target.endsWith(".json") ? target : join(target, "tsconfig.json"),
       );
     }
-    for (const [option, value] of Object.entries(
-      config.compilerOptions ?? {},
-    )) {
+    const text = readFileSync(file, "utf8");
+    const report = (option, message) => {
+      const entry = inherited.get(message) ?? { setIn: [], affected: [] };
+      entry.affected.push(name);
+      if (new RegExp(`"${option}"\\s*:`).test(text)) entry.setIn.push(name);
+      inherited.set(message, entry);
+    };
+    const all = config.compilerOptions ?? {};
+    for (const [option, value] of Object.entries(all)) {
       const lower = typeof value === "string" ? value.toLowerCase() : value;
       if (REMOVED_OPTIONS[option])
-        problems.push(`${name}: "${option}" ${REMOVED_OPTIONS[option]}`);
+        report(option, `"${option}" ${REMOVED_OPTIONS[option]}`);
       if (REMOVED_VALUES[option]?.values.includes(lower))
-        problems.push(
-          `${name}: "${option}": "${value}" is removed; ${REMOVED_VALUES[option].fix}`,
+        report(
+          option,
+          `"${option}": "${value}" is removed; ${REMOVED_VALUES[option].fix}`,
         );
       if (
         (option === "esModuleInterop" ||
           option === "allowSyntheticDefaultImports") &&
         value === false
       )
-        problems.push(
-          `${name}: "${option}": false is not allowed. Delete it and fix the imports`,
+        report(
+          option,
+          `"${option}": false is not allowed. Delete it and fix the imports`,
         );
     }
-    if (!config.compilerOptions) continue;
-    const all = options(file);
     const nodeModule = /^node(16|18|20|next)$/i;
     if (
       all.moduleResolution &&
       nodeModule.test(all.moduleResolution) !==
         nodeModule.test(all.module ?? "")
     )
-      problems.push(
+      perConfig.push(
         `${name}: "module": "${all.module ?? "(default)"}" and "moduleResolution": "${all.moduleResolution}" must both be Node.js settings or neither (see 5to6.md)`,
       );
     if ((all.outDir || all.declarationDir) && !all.rootDir && !all.noEmit)
-      problems.push(
+      perConfig.push(
         `${name}: sets "outDir" without "rootDir". TypeScript 6+ defaults rootDir to the tsconfig directory (TS5011 if the sources are elsewhere); set "rootDir" to the directory that contains the sources${includeRoot(config.include) ? ` (here probably "${includeRoot(config.include)}")` : ""} and check that the emitted paths still match package.json`,
       );
   }
-  return problems;
+  const grouped = [...inherited].map(([message, { setIn, affected }]) => {
+    const others = affected.filter((name) => !setIn.includes(name));
+    const where = setIn.length
+      ? setIn.join(", ")
+      : `${others.shift()} (through "extends")`;
+    const more = others.length
+      ? ` Also inherited by ${others.length} other config(s): ${others.slice(0, 3).join(", ")}${others.length > 3 ? ", …" : ""}.`
+      : "";
+    return `${where}: ${message}.${more}`;
+  });
+  const unread = [...unreadable].map(
+    ([message, names]) =>
+      `${names[0]}${names.length > 1 ? ` and ${names.length - 1} other config(s)` : ""}: cannot be read (${message}). If it extends a package, install dependencies and rerun`,
+  );
+  return [...grouped, ...perConfig, ...unread];
 }
 
 // ── Main ───────────────────────────────────────────────────────────────────────
@@ -541,8 +444,11 @@ try {
   console.error("check-ts7: run this inside the project's git repository");
   process.exit(2);
 }
-const manifests = checkManifests(baseline);
-const problems = [...manifests.problems, ...checkConfigs(manifests.members)];
+const members = await packageDirectories();
+const problems = [
+  ...checkManifests(baseline, members),
+  ...checkConfigs(members),
+];
 if (problems.length === 0) {
   console.log(
     "check-ts7: no remaining TypeScript 7 problems in package.json declarations or tsconfig options.",
