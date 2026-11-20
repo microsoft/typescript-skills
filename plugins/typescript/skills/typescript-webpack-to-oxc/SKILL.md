@@ -5,105 +5,77 @@ description: Migrate existing webpack and/or ESLint tooling to Oxc, Oxlint, Roll
 
 <!-- prettier-ignore-start -->
 
-Migrate the requested tooling in an existing repository. Preserve its callable workflows and consumer contracts, not just successful compilation.
+Migrate only the requested tooling; preserve unrelated tooling, callable workflows, and consumer behavior.
 
-**Definition of done.** For a webpack + ESLint replacement, finish only when:
+**A running terminal ID means work remains in this turn.** Follow that exact install/build/test operation to a finished exit/result; never end with it running or a progress-only promise to continue. Do not finish with no migration edits unless an exact blocker prevents work. On a real blocker, finish or stop owned operations and report the failure.
 
-- **Existing script keys remain callable**, including names such as `eslint`, `webpack`, `prestart`, and pre/post lifecycle hooks. Change their implementations, not their names; scripts are a public API.
-- **No `package.json` script still invokes webpack or ESLint.** Lint scripts invoke **Oxlint**; build/bundle scripts that used webpack visibly invoke **Rolldown, Vite, or tsdown**, through their CLI or a clearly named runner that actually imports/calls the replacement bundler. Trace aliases and wrappers to prove execution; neither an unused dependency nor a tool name in a comment is integration. Keep independent TypeScript-only build stages.
-- A clean locked install, required preparation, build, typecheck, lint, full test surface, and consumer smoke checks complete in the **same supported final environment**, for every affected package.
-- Published formats, export accessors, files, resource URLs, and development/production/runtime behavior match the baseline. Build success and source tests alone do not prove artifact equivalence.
+## 1. Gate tool releases on the actual runtime
 
-If only webpack or only ESLint is requested, apply the replacement gates to that tool and preserve unrelated tooling. Record blocked or failing gates explicitly; an alternative working command is not a completed migration.
+Read repository instructions first. Record actual Node/package-manager versions and pins, OS/architecture, CI/container and replay/deployment constraints. Missing authorized infrastructure is a blocker, not permission to bypass restrictions.
 
-## 1. Preflight: environment and installation
+> **Release-selection gate**
+>
+> 1. Choose a candidate compatible with those constraints, engines, peers, and required native/browser support.
+> 2. **Before editing manifests for that candidate**, execute its CLI/API and a minimal required-feature probe on the actual permitted runtime; use an isolated project-local install if needed. Missing `engines` metadata is not evidence of compatibility.
+> 3. If tests need runtime A but the bundler needs B, **stop and reselect** a release/implementation or report an unresolved blocker. Never combine cross-runtime failures into a green ledger.
+> 4. Upgrade runtime only when permitted and the actual final install/build/lint/test environment changes together. CI YAML edits alone or selected `npx node@…` commands do not change the environment executing delivered scripts.
 
-- Read repository instructions before executing anything. Record Node/package-manager pins, actual versions, OS/architecture, CI/container setup, deployment targets, and native/browser prerequisites. Respect execution restrictions; missing authorized infrastructure is a blocker, not permission to run prohibited host commands.
-- Reuse installed dependencies for discovery. If required tools are missing, restore with the existing manager and authoritative lock: `npm ci`, `pnpm install --frozen-lockfile`, Yarn modern `install --immutable`, or Yarn classic `install --frozen-lockfile`. Handle registry authentication through the repository's documented mechanism.
-- Freeze the supported environment **before choosing tool releases**. It must satisfy engines, package-manager compatibility, native/optional bindings, tests, and deployment requirements together. Temporary newer Node plus tests on older Node is not one passing pipeline.
-- Inspect candidate package identity, engine ranges, peer requirements, and documentation for the **selected release** (e.g. package-manager metadata queries). The npm package named `oxc` is not automatically the intended bundler. Select a compatible release line instead of forcing latest or using `--ignore-engines`. If an upgrade is required and allowed, validate the entire pipeline on it.
-- Confirm that the resolved Vite/tsdown release or integration actually uses the requested Oxc/Rolldown tooling; the product name alone is not backend evidence. Prefer Rolldown for explicit bundle contracts, Vite for application/dev-server pipelines, and tsdown for library packaging, subject to the required features.
-- Change manifests and authoritative locks **together**, using the existing manager. Preserve unrelated resolutions and lock formats where practical; do not delete locks or defer reconciliation. Read installed help, schemas, typings, and examples before configuring APIs; do not guess plugin names/options when web docs are unavailable.
-- Preserve install/lifecycle preparation and required native/optional dependencies. A scripts-disabled install or hand-repaired `node_modules` is diagnostic only unless the permitted setup explicitly reproduces all required preparation. Final verification must reproduce it from the lock.
-- Provision browser/native prerequisites through permitted repository procedures. Configure noninteractive/headless execution explicitly where needed; preserve generic and CI routes rather than testing only the easier one.
+Prefer Rolldown for explicit bundles, Vite for apps/dev servers, or tsdown for library packaging, subject to observed contracts. Verify the selected release's package identity and actual Oxc/Rolldown backend; neither the name `oxc` nor a product name proves suitability.
 
-## 2. Inventory the command graph and artifact contract
+Reuse installed dependencies; restore missing tools with the existing manager's locked install and documented registry authentication. Update manifests and authoritative locks together; preserve unrelated resolutions. Keep normal lifecycle/native/optional/browser preparation reproducible: ignored engines/scripts and hand-repaired `node_modules` are not final proof.
 
-Before editing, record these inventories and the [verification ledger](#5-verification-ledger).
+## 2. Capture one executable consumer checkpoint
 
-### Command/package graph
+Read the affected script → aliases/runner → config/input/output and its existing consumer. Build one representative old route and record **only contracts present here**, not an exhaustive pre-edit inventory:
 
-- Enumerate root/member manifests, actual workspace definitions, independently installed packages, and directory-walking install/build scripts. TypeScript references are not package installation boundaries.
-- Trace scripts → aliases/task runners → CLI/API calls. Include CI, containers, editor tasks, docs, publishing, dev servers, test transforms, lint API/fix/quiet routes, and pre/post hooks. Preserve ordering: generated/compiled inputs must exist before bundling.
-- List every production, development, watch, release, example, style, library, CLI, and platform-specific route. Root `test` may omit API, declaration, native, renderer, or browser lanes; inventory them all.
-- Keep shared configuration **outside enumerated package collections**, unless every existing walker is made robust to non-package entries. Use directory + manifest checks, not a newly narrowed glob that hides broken existing traversal.
+| Observed route       | Expected baseline contract                 | Actual assertion/result              |
+| -------------------- | ------------------------------------------ | ------------------------------------ |
+| First built consumer | Exact accessor + representative API result | Baseline result; replacement pending |
 
-### Observable artifact matrix
+For example, this tiny CJS accessor assertion can start a project-local probe:
 
-For each entry/output, record:
+```js
+const assert = require("node:assert/strict");
+const api = require("./dist/entry.cjs").default;
+assert.equal(typeof api, "function");
+```
 
-- Producer, source/generated input, filename/output directory, ESM/CJS/IIFE/UMD format, exact export accessor (`require(...)`, `.default`, named property, direct constructor), global name, and named/anonymous AMD registration where advertised.
-- Externals and their browser globals, aliases, module resolution, target syntax, JSX/Babel semantics, development/production defines, and injected runtime dependencies.
-- CSS/Sass/PostCSS, SVG components versus URLs/raw text, copied assets/licenses, code splitting, source-map chaining to original sources, and declaration generation.
-- Worker constructor/API, classic/module mode, inline Blob **and external fallback**, CSP failure behavior, disposal, WASM/async initialization, no-worker API, and fetchable resource/base/worker-relative URLs.
-- Package `main`/`module`/`browser`/`exports`/`types`, deep imports, publish contents, HTML/static routes, and dev-server behavior (including proxy, redirects, base paths, and watch/HMR).
+Replace the path/accessor with the baseline's actual direct/default/named shape; never use `loaded.default ?? loaded`. Add a real API call and assert its recorded result before marking the row passed. File/regex/`typeof` checks are intermediate observations, not consumer proof.
 
-Run baseline build/typecheck/lint/tests and representative **built-artifact** consumer probes before replacing configuration. Capture export shapes and important files/URLs as acceptance expectations; keep source tests too. If baseline execution is blocked, distinguish documented expectations from observed results.
+Open [consumer-smoke.md](references/consumer-smoke.md) **relative to the full path of the SKILL.md just opened**, not by searching the target workspace. Use its Node/browser/worker recipes for observed routes; resolve other skill references the same way.
 
-## 3. Replace webpack responsibilities deliberately
+Machine consumers include stdout readiness strings, task problem matchers, browser global aliases, URL redirects, exit codes, and lifecycle timing: preserve them or update their actual consumers together, checking nested/trailing-slash routes. If a runner hangs before specs, inspect its startup condition before blaming browsers.
 
-Choose the tool by the artifact matrix; do not default every library to ESM or replace a test framework merely to change its bundler.
+Keep tests/fixtures as acceptance consumers. If adapting one is necessary, prove the public alias/API remains equivalent; do not make only a smoke page consume a new contract. Label blocked baseline expectations as documented, not observed.
 
-| Webpack feature                                                    | Replacement responsibility                                                                                                                                                                                                                                                                                                                   |
-| ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Entries, output, `libraryTarget`/`libraryExport`, `umdNamedDefine` | Configure every format/filename and exact default-versus-namespace/direct-constructor shape. Preserve named AMD and each advertised loader branch. Check the selected bundler's supported formats; use a small adapter entry or explicit compatibility wrapper if it cannot express the contract. Never silently replace UMD with ESM.       |
-| `externals`, aliases, resolution                                   | Preserve bundled-versus-external choices, peer dependencies, global mappings, browser conditions, and CommonJS interop. Test through package entry points, not only direct source imports.                                                                                                                                                   |
-| `DefinePlugin`, `ProvidePlugin`, browser polyfills                 | Separate compile-time replacement from module injection/runtime shims. Preserve production `NODE_ENV`; audit `process`, `Buffer`, `global`, and Node built-ins in browser output, including transformed dependencies. Configure dev and production paths separately and execute both. Do not dismiss unresolved browser imports as harmless. |
-| TS/Babel loaders, transpilation/minification                       | Preserve targets, JSX mode/runtime, decorators and other used transforms, banners/licenses, and production semantics. Keep independent `tsc` typechecks and declaration producers; fast transpilation is not typechecking.                                                                                                                   |
-| CSS/Sass/PostCSS, URL/raw/SVG loaders, copy plugins                | Map each import's semantics, extraction, ordering, names, public paths, and copied resources. An SVG React component is not an image URL. Verify emitted files and served URLs, including nested/trailing-slash routes.                                                                                                                      |
-| `worker-loader`                                                    | Bundle the worker and preserve constructor shape, classic/module choice, inline Blob behavior, external fallback, CSP failure path, URL/base handling, and cleanup. Vite worker query syntax is a candidate, not proof of equivalent fallback behavior.                                                                                      |
-| WASM and dynamic-import loaders                                    | Preserve async initialization, splitting, fetchable resources/MIME types, worker-relative paths, and direct no-worker entry points. Do not inline all resources or change a published format solely to make compilation work.                                                                                                                |
-| Source maps, declarations, dev-server/test plugins                 | Chain maps back to original TS, retain declaration/package routing, and replace dev/test integration without dropping lanes. Prefer changing the existing runner's transform/bundler integration over migrating Karma/Mocha/etc. to another framework.                                                                                       |
+## 3. Implement and verify vertical slices
 
-Wire replacements into **the existing script keys and callers**. Prefer transparent CLI/config recipes; use clearly identified API runners when custom loader/plugin behavior needs them, and verify their imports against the installed API. Preserve non-webpack producers and unconverted consumers/dependencies.
+Repeat **one route → replacement → original entry point → built consumer → repair**, then expand to the next observed variant. Discover remaining package/install boundaries, scripts, CI/editor/publish callers, and omitted test lanes incrementally; never silently omit them. Do not require every baseline suite before the first focused replacement.
 
-After the first working bundle, immediately run the relevant [consumer smoke recipe](references/consumer-smoke.md). Fix export/resource mismatches before expanding to other variants; reuse those probes in the final gate.
+Consult [feature-map.md](references/feature-map.md) for features actually encountered. Use selected-release help/schema/types for the needed API, not broad schema tours. Preserve non-webpack producers, typechecks/declarations, and test runners unless replacement is necessary.
 
-## 4. Migrate ESLint to Oxlint semantically
+**Scripts are public API; keep existing keys and pre/post hooks callable**, including `eslint` and webpack-named keys. Make the build graph transparent to users: bundler-backed `build`, `build:*`, and `bundle*` routes should visibly invoke the new bundler, preferably a CLI/config (`rolldown -c`, `vite build`) or tool-named helper such as `bundle:rolldown`. Retain legacy webpack-named keys only as aliases **to the new canonical script**, never as keys the build/bundle routes call. When a custom Node API runner is needed, expose the bundler in the script body/runner filename or helper key (for example, `node scripts/rolldown.config.mjs`) and verify it actually calls the installed API. Keep independent TypeScript-only stages.
 
-- Inventory effective ESLint rules, plugins, environments/globals, ignores, directory overrides, file extensions, declaration lint, and inline suppressions. Capture lint entry points, including fix/quiet/API variants.
-- Use the selected Oxlint release's help, schema, rule list, and effective configuration. An official migration helper can bootstrap configuration, but inspect its diff; unsupported rules/options must not be copied blindly.
-- Map supported correctness rules and plugin behavior explicitly. Preserve browser/Node/test globals and directory-specific overrides. Translate suppression names/directives only where the replacement rule exists; remove obsolete directives rather than disabling broad categories.
-- Keep declaration/API lint in scope: default ignores or file discovery must not silently drop previously linted `.d.ts`/`.d.mts`/`.d.cts` or other inputs. Verify included files and intentional exclusions.
-- Formatting rules such as `semi`/`quotes` are not automatically Oxlint rules. Keep formatting in a separate appropriate tool when needed; explain unavailable rule coverage and any deliberate replacement. Do not weaken types, add `any`/`skipLibCheck`, delete assertions, or disable correctness categories to get green.
-- Preserve existing lint **keys**, even `eslint`, while changing their bodies to `oxlint` with equivalent scope and supported flags. Add a lint entry if none existed and linting is requested. Inspect fixer diffs and revert unrelated changes; use check mode for final verification.
-- Run Oxlint on the original input scope and the repository's typechecks/tests. For nontrivial rule translations, retain or add focused cases proving intended violations are still rejected.
+**Repair the currently observed red check before optional parity work or new API substitutions.** Keep one session ledger: command/consumer, environment, expected → actual result, finished status. Rerun affected rows, not independent completed checks after every edit; reserve repeated clean installs/full suites for dependency/lifecycle changes and the final gate.
 
-## 5. Verification ledger
+**Invalidate consumer results** after changing source → generated JS input, TS `module`, interop/export mode, wrappers, injection, final minifier, or resource URL logic. Rebuild and rerun the exact baseline accessor/API against final output before continuing to another variant.
 
-Keep a compact ledger in the session, not a new committed planning document:
+For temporary servers/watchers, record ownership and actual process tree/port, use bounded readiness waits, and execute the real consumer. Stop the owned process tree and confirm exit/port release before replay or finishing. If a terminal wrapper detaches, inspect the existing service rather than launching a duplicate.
 
-| Package/route and environment               | Command or consumer contract                            | Baseline    | Final exit/result         |
-| ------------------------------------------- | ------------------------------------------------------- | ----------- | ------------------------- |
-| Root and each independent package           | Locked install + lifecycle/native/browser preparation   | Result      | Pending/pass/fail/blocked |
-| Every original build/dev/watch/lint entry   | Exact existing script key and caller                    | Result      | Result                    |
-| Typechecks/declarations and full test lanes | Commands, completed counts, expected skips/warnings     | Result      | Result                    |
-| Every published/runtime variant             | Export/API, asset/worker/WASM URL, browser/CLI behavior | Expectation | Result                    |
+## 4. Translate lint semantics
 
-After the last dependency/configuration changes, run in dependency order:
+Preserve effective rules, **defaults/options**, globals, ignores, overrides, extensions, suppressions, declaration/API scope, and fix/quiet/API routes. Translate against the selected Oxlint release's help/schema/rule list; inspect migration-helper output rather than copying unsupported rules.
 
-1. **Script-call audit.** Compare script keys against the baseline; retain every existing callable entry and hook. Inspect all affected manifests and trace active wrappers/configs/CI for old tool execution. For the full replacement, no script invokes ESLint/webpack; lint reaches Oxlint and webpack-owned build/bundle routes visibly reach the chosen new bundler. A legacy key mentioning the retired tool is fine; executing it is not.
-2. **Clean locked setup** in the supported runtime for root and independent packages, including original package-discovery routes and required preparation. Do not finish with ignored engines/scripts or only a one-off native rebuild.
-3. **Clean/uncached build, typecheck/declaration, and lint**, using existing entry points. Verify every production/development/library/style/example/platform output, then check watch/dev readiness and a rebuild; stop verification servers/watchers afterwards.
-4. **Full original test surface**, including API/declaration, native, browser, and renderer lanes plus generic and CI routes where different. Preserve assertions, hooks/globals, and baseline counts/skips; investigate new failures. Do not replace a runner unless necessary and then preserve all lanes.
-5. **Built/packed consumer probes** from the artifact matrix: CJS/ESM, advertised AMD/globals, representative API/constructor calls, browser without accidental Node globals, production and dev serving, inline/fallback/no-worker paths, and actual resource requests. Inspect publish contents and source maps/declarations as well.
+Use supported scoped options for semantic differences (including unused catch bindings); do not escalate broad correctness categories. Map suppressions only to existing rules, verify included/excluded files, and keep formatting in a separate tool where needed. Do not weaken types, add `any`/`skipLibCheck`, or delete assertions to get green.
 
-Wait for each operation's **finished exit/result**. A terminal ID, first few specs, syntax check, editor diagnostic, or generated-file inspection is not a passing suite/runtime. Do not combine results from different Node versions or stale installs. Late changes invalidate affected rows: rerun installation for dependency/lifecycle changes and every downstream affected gate.
+Keep lint keys, even `eslint`, invoking Oxlint with equivalent scope/flags; add an entry if requested and absent. Inspect fixer diffs, revert unrelated edits, and finish in check mode. Use focused cases for nontrivial rule translations.
 
-## 6. Cleanup and report
+## 5. Finish one reproducible pipeline
 
-- Remove obsolete webpack/ESLint configs, loaders, plugins, and dependencies **only after tracing all consumers**. Do not remove a browser/native dependency while tests or other callers still need it. Update docs/editor/CI recipes without renaming public entry points.
-- Inspect the full diff and `git status`. Remove only logs, probe consumers, dev bundles/maps, caches, and other output you created that should not ship. Preserve user-owned work, intentionally versioned artifacts, license assets, and wired replacement configs.
-- Report the resolved tool versions/backend, preserved script keys and artifact variants, baseline-versus-final ledger, rule/compatibility adaptations, and all failed/blocked/not-run gates. Say exactly which suites finished; never claim completion while replacement or consumer checks remain unverified.
+- Audit original script keys/callers and all discovered routes. For a full replacement, no script executes webpack/ESLint; bundler routes and lint actually reach their replacements.
+- In the **same supported final environment**, complete clean locked setup/preparation for root and independent packages, then clean build, typechecks/declarations, lint, and the full original test surface: API/declaration/native/browser/renderer plus distinct generic/CI lanes. Record finished counts/skips and investigate regressions.
+- Replay affected built/packed consumers for every observed published/runtime variant, including dev/watch readiness and rebuilds, production serving, resources, package contents, and maps. Source tests or initial specs do not substitute for finished consumer/suite results.
+- Remove obsolete tooling only after tracing remaining consumers. Curate the diff: remove incidental probes/logs/generated output, not user work, versioned artifacts, required license notices, or wired configs; update affected docs/editor/CI recipes.
+- Report resolved releases/backend, adaptations, preserved routes, and the compact ledger with failed/blocked/not-run checks explicit. An alternative command or mixed-runtime ledger is not completion.
 
 <!-- prettier-ignore-end -->
